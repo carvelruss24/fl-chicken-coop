@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}About Us | Florida Chicken Coops{% endblock %}
+{% block body_class %}about{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/about-us/about-us-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">About Us</p>
+    <h1 class="page-hero__title">
+      A Florida company. Building Florida coops.
+      <em>For Florida families.</em>
+    </h1>
+    <p class="page-hero__lead">Built Out of Frustration. Perfected Out of Love.</p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="standard">
+  <div class="standard__inner container">
+    <div class="standard__head">
+      <p class="eyebrow">Our Standard</p>
+      <h2 class="standard__title">We make <em>over-engineered</em> backyard structures.</h2>
+    </div>
+    <div class="standard__body">
+      <p class="standard__text">
+        We started Florida Chicken Coops because we couldn't find a coop built
+        the way we'd build a small outdoor structure — with real lumber ratings,
+        real structural fasteners, real corrosion-resistant hardware, and a real
+        understanding of what Florida humidity does to wood over time.
+      </p>
+      <p class="accent-statement">So we built it ourselves.</p>
+      <p class="standard__text">
+        Every coop we make is constructed in our Florida workshop using the same
+        materials and methods a professional builder would use on any permanent
+        outdoor structure.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="quote">
+  <div class="container">
+    <blockquote class="quote__text">
+      &ldquo;We don't make hobbyist coops. We don't make farm-cute novelty
+      coops. We make over-engineered backyard structures that happen to house
+      chickens.&rdquo;
+    </blockquote>
+  </div>
+</section>
+
+<section class="serve">
+  <div class="serve__inner container">
+    <div class="serve__body">
+      <p class="eyebrow">Why We Only Serve Florida</p>
+      <h2 class="serve__title">Built for here. <em>Built to breathe.</em></h2>
+      <p class="serve__text">
+        Florida isn't like anywhere else in the country, and the structures that
+        survive here have to be built for here. Out-of-state coop builders don't
+        engineer for hurricane connectors. They don't seal cut ends against
+        fungal decay. They don't specify ground-contact lumber rated for
+        high-moisture environments. They don't have to.
+      </p>
+      <p class="accent-statement">We Do.</p>
+      <p class="serve__text">
+        That's why we build for Florida families only — Miami to Jacksonville,
+        the Keys to the Panhandle.
+      </p>
+    </div>
+    <div class="serve__media" role="img" aria-label="Delivering a coop to a Florida backyard"
+         style="background-image: url('{{ url_for('static', filename='img/about-us/image-1.webp') }}')"></div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+    <h2 class="cta__title">Built to <em>outlast</em> the flock.</h2>
+    <p class="cta__sub">When you're ready, we'll build yours.</p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+        Place a Deposit <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

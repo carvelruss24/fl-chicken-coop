@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Decorative rooster silhouette (the bird from logo.svg, wordmark removed).
+  Used as a faint watermark behind dark sections. Color is set here; overall
+  subtlety is controlled with CSS opacity. Replace alongside the real logo.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 90 102" fill="#c5a06a" aria-hidden="true">
+  <!-- tail feathers -->
+  <path d="M16 72 C 8 54, 17 40, 32 44 C 23 52, 26 62, 37 67 Z"/>
+  <path d="M11 82 C 2 66, 12 50, 27 53 C 18 63, 21 73, 33 76 Z"/>
+  <!-- body -->
+  <ellipse cx="46" cy="70" rx="23" ry="17"/>
+  <!-- neck / breast -->
+  <path d="M55 58 C 56 46, 62 40, 64 40 L 70 52 C 68 60, 61 66, 54 66 Z"/>
+  <!-- head -->
+  <circle cx="63" cy="42" r="10"/>
+  <!-- comb -->
+  <path d="M57 33 q3 -8 6 -2 q3 -7 6 -1 q3 -5 5 1 q-1 5 -5 5 l-12 0 z"/>
+  <!-- beak -->
+  <path d="M72 42 l 13 -3 l -11 8 z"/>
+  <!-- wattle -->
+  <path d="M64 51 q4 6 0 11 q-4 -4 -3 -11 z"/>
+  <!-- legs -->
+  <path d="M42 86 l 0 13 M52 86 l 0 13 M37 99 l 9 0 M48 99 l 9 0"
+        stroke="#c5a06a" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>

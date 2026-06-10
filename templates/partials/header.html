@@ -1,0 +1,32 @@
+{# Shared site header. Nav data comes from app.py via the context processor.
+   Active link is derived server-side from request.endpoint. #}
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<header class="site-header">
+  <div class="header-inner container">
+    <a class="brand" href="{{ url_for('index') }}" aria-label="Florida Chicken Coops — home">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="290" height="120" />
+    </a>
+
+    <button class="nav-toggle" type="button"
+            aria-expanded="false" aria-controls="site-nav" aria-label="Open menu">
+      <span class="nav-toggle__bars"></span>
+    </button>
+
+    <div class="nav-wrap" id="site-nav">
+      <nav class="primary-nav" aria-label="Primary">
+        <ul>
+          {% for link in nav_links %}
+          {% set active = (request.path == link.url) %}
+          <li>
+            <a href="{{ link.url }}"
+               {%- if active %} class="is-active" aria-current="page"{% endif %}>{{ link.label }}</a>
+          </li>
+          {% endfor %}
+        </ul>
+      </nav>
+      <a class="btn-contact" href="{{ contact.cta.url }}"
+         {%- if request.path == contact.cta.url %} aria-current="page"{% endif %}>{{ contact.cta.label }}</a>
+    </div>
+  </div>
+</header>

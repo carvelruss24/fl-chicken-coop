@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+
+{% block title %}Home | Florida Chicken Coops{% endblock %}
+{% block body_class %}home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero__inner container">
+    <p class="eyebrow eyebrow--light">Built in Florida, for Florida</p>
+
+    <h1 class="hero__title">
+      Some mornings are worth
+      <em>waking up for.</em>
+    </h1>
+
+    <p class="hero__lead">
+      Premium, over-engineered chicken coops — built in Florida, for Florida.
+      Designed to last decades, not seasons.
+    </p>
+
+    <div class="hero__actions">
+      <a class="btn btn--solid" href="/our-coops">See Our Coops</a>
+      <a class="btn btn--outline" href="{{ contact.cta.url }}">
+        Request a Quote <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="statement">
+  <div class="statement__inner container">
+    <div class="statement__heading">
+      <p class="eyebrow">A Different Kind of Backyard</p>
+      <h2 class="statement__title">
+        This is what a few hens
+        <em>actually changes.</em>
+      </h2>
+    </div>
+
+    <div class="statement__body">
+      <p class="statement__text">
+        A Florida Chicken Coop isn't a hobby purchase. It's a daily ritual —
+        one that changes how your family moves through the morning, how your
+        kids understand the world, and how your backyard feels at the end of a
+        long day.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="features">
+  {% set features = [
+    {
+      "num": "01", "kicker": "Saturday Morning",
+      "title": "Breakfast starts in the backyard now.",
+      "text": "The kids wouldn't have it any other way.",
+      "img": "home/image-1.webp",
+      "alt": "A hen on the nesting roost beside a clutch of fresh eggs"
+    },
+    {
+      "num": "02", "kicker": "Feeding by Hand",
+      "title": "They'll name every single one.",
+      "text": "You'll let them.",
+      "img": "home/image-2.webp",
+      "alt": "Two hens perched together inside the coop"
+    },
+    {
+      "num": "03", "kicker": "Dusk on the Patio",
+      "title": "Something quietly grounding about watching them.",
+      "text": "At the end of a long day, there's a particular kind of peace in watching a flock do what a flock does.",
+      "img": "home/image-3.webp",
+      "alt": "A hen walking up the ramp into the coop"
+    },
+    {
+      "num": "04", "kicker": "The Egg Haul",
+      "title": "You'll never look at a grocery store egg the same way.",
+      "text": "You know where these came from. You were there when it happened.",
+      "img": "home/image-4.webp",
+      "alt": "A carton of freshly collected brown and white eggs"
+    }
+  ] %}
+
+  <div class="features__grid">
+    {% for f in features %}
+    <article class="feature">
+      <div class="feature__media"
+           role="img" aria-label="{{ f.alt }}"
+           style="background-image: url('{{ url_for('static', filename='img/' ~ f.img) }}')"></div>
+      <div class="feature__body">
+        <p class="eyebrow feature__num">{{ f.num }} &mdash; {{ f.kicker }}</p>
+        <h3 class="feature__title">{{ f.title }}</h3>
+        <p class="feature__text">{{ f.text }}</p>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% macro reason_icon(name) -%}
+  {%- if name == 'food' -%}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M8 2v16"/>
+    <path d="M5 2v4a3 3 0 0 0 6 0V2"/>
+    <path d="M16 22V2c2.6 1.4 3.6 4.8 3.6 8.4 0 2-1.6 3.6-3.6 3.6"/>
+  </svg>
+  {%- elif name == 'sustainability' -%}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5"/>
+    <path d="M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12"/>
+    <path d="m14 16-3 3 3 3"/>
+    <path d="M8.293 13.596 7.196 9.5 3.1 10.598"/>
+    <path d="m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 11.985 3a1.784 1.784 0 0 1 1.546.888l3.943 6.843"/>
+    <path d="m13.378 9.633 4.096 1.098 1.097-4.096"/>
+  </svg>
+  {%- elif name == 'family' -%}
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+    <circle cx="9" cy="7" r="4"/>
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+  {%- endif -%}
+{%- endmacro %}
+
+<section class="reasons">
+  <div class="container">
+    <header class="reasons__header">
+      <p class="eyebrow">The Why</p>
+      <h2 class="reasons__title">A few small reasons <em>families never go back.</em></h2>
+    </header>
+
+    {% set reasons = [
+      {
+        "icon": "food",
+        "title": "Food independence",
+        "text": "Know exactly where your breakfast comes from — because you were there when it happened. Real food, real transparency, real connection."
+      },
+      {
+        "icon": "sustainability",
+        "title": "Sustainability",
+        "text": "A backyard flock is one of the most natural, low-impact ways to live a little closer to the source. No supply chain. No packaging. Just eggs."
+      },
+      {
+        "icon": "family",
+        "title": "Family",
+        "text": "Raising chickens gives kids something rare: real responsibility, real reward, and a reason to go outside. The lessons last longer than the eggs."
+      }
+    ] %}
+
+    <div class="reasons__grid">
+      {% for r in reasons %}
+      <article class="reason">
+        <span class="reason__icon" aria-hidden="true">{{ reason_icon(r.icon) }}</span>
+        <h3 class="reason__title">{{ r.title }}</h3>
+        <p class="reason__text">{{ r.text }}</p>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="dream">
+  <div class="dream__inner dream__inner--head">
+    <p class="eyebrow">Built in Florida, for Florida</p>
+    <h2 class="dream__title">
+      The coop is where the dream lives.
+      <em>Ours are built to last.</em>
+    </h2>
+  </div>
+
+  <div class="dream__photos" aria-hidden="true">
+    {% for img in [6, 8, 5, 7] %}
+    <div class="polaroid dream__photo dream__photo--{{ loop.index }}">
+      <span class="polaroid__photo"
+            style="background-image: url('{{ url_for('static', filename='img/home/image-' ~ img ~ '.webp') }}')"></span>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="dream__inner dream__inner--copy">
+    <p class="dream__text">
+      Florida is one of the hardest environments in the country to build an
+      outdoor structure that lasts. Sustained heat. Coastal humidity. Termites.
+      Wind-driven rain. Hurricane-force gusts. Predators that have evolved
+      alongside backyard flocks for generations.
+    </p>
+    <p class="dream__text">
+      Most chicken coops on the market are built for appearance. Ours are
+      engineered for the reality of keeping a flock alive and thriving through
+      a Florida summer.
+    </p>
+  </div>
+</section>
+
+<section class="quote">
+  <div class="container">
+    <blockquote class="quote__text">
+      &ldquo;Most coops are built for appearance. Ours are engineered for the
+      realities of Florida living.&rdquo;
+    </blockquote>
+  </div>
+</section>
+
+<section class="specs">
+  <div class="container">
+    <header class="specs__header">
+      <p class="eyebrow">Overbuilt by Design.</p>
+      <h2 class="specs__title">
+        Commercial-grade materials.
+        <em>Storm-conscious construction.</em>
+      </h2>
+    </header>
+
+    {% set specs = [
+      {"img": "spec-01.jpg", "title": "Foundation lumber — UC4A/UC4B pressure-treated", "text": "The highest ground-contact rating available. Built to survive direct exposure to wet Florida soil for decades."},
+      {"img": "spec-02.jpg", "title": "Cedar and cypress board and trim", "text": "Naturally resistant to rot, moisture, and insects. The only wood species that belong on an outdoor structure built for Florida humidity."},
+      {"img": "spec-03.jpg", "title": "Elevated rot-resistant base", "text": "Lifted off the ground so moisture can't wick up into the frame. Drier structure, longer lifespan."},
+      {"img": "spec-04.jpg", "title": "Simpson Strong-Tie hurricane connectors", "text": "Galvanized roof-to-wall connectors meeting hurricane-rated structural standards. The roof stays where it belongs."},
+      {"img": "spec-05.jpg", "title": "Insulated Metal Roofing", "text": "Reflects heat. Withstands wind. Outlasts every shingle and wood roof in a Florida climate."},
+      {"img": "spec-06.jpg", "title": "Galvanized-after-welding (GAW) 16-gauge hardware cloth", "text": "Dip-coated after welding, so every joint and cut edge is sealed against corrosion. The difference between mesh that lasts six years and mesh that lasts twenty."},
+      {"img": "spec-07.jpg", "title": "Stainless steel and hot-dipped galvanized hardware", "text": "Every hinge, latch, and fastener specified for coastal humidity. Nothing rusts, seizes, or fails."},
+      {"img": "spec-08.jpg", "title": "Ground Anchoring System", "text": "Every coop anchored at installation — not just set in place. A structure, not furniture."},
+      {"img": "spec-09.jpg", "title": "Copper naphthenate cut-end sealing", "text": "Every cut end sealed against moisture, rot, and fungal decay. The slow way to build. The only way to build something that lasts."},
+      {"img": "spec-10.jpg", "title": "Simpson Strong-Tie and GRK RSS structural screws", "text": "Corrosion-resistant coatings, exceptional shear strength. Standard screws strip and fail. Ours don't."}
+    ] %}
+
+    <div class="specs__grid">
+      {% for s in specs %}
+      <article class="spec">
+        <div class="spec__body">
+          <h3 class="spec__title">{{ s.title }}</h3>
+          <p class="spec__desc">{{ s.text }}</p>
+        </div>
+        <div class="spec__media" role="img" aria-label="{{ s.title }}"
+             style="background-image: url('{{ url_for('static', filename='img/home/image-' ~ (loop.index + 8) ~ '.webp') }}')"></div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="sizes">
+  <div class="sizes__inner container">
+    <div class="sizes__header">
+      <h2 class="sizes__title">
+        Three standard sizes.
+        <em>Custom builds welcome.</em>
+      </h2>
+      <div class="sizes__intro">
+        <p>
+          Every model is built with the same materials, the same standards, and
+          the same structural integrity. The only difference is size.
+        </p>
+        <a class="btn btn--outline" href="/our-coops">
+          See Pricing &amp; Order <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+
+    {% set plans = [
+      {"name": "Small",  "img": "size-small.jpg",  "size": "8′ × 6′",  "capacity": "8–10 hens",  "price": "$5,900", "desc": "Ideal for compact backyards and first-time flock owners."},
+      {"name": "Medium", "img": "size-medium.jpg", "size": "12′ × 6′", "capacity": "12–14 hens", "price": "$6,499", "desc": "Our most popular model. The perfect balance of space, presence, & value."},
+      {"name": "Large",  "img": "size-large.jpg",  "size": "16′ × 6′", "capacity": "16–20 hens", "price": "$6,900", "desc": "Maximum space for serious backyard setups. Built for the long haul."}
+    ] %}
+
+    <div class="sizes__grid">
+      {% for p in plans %}
+      <article class="plan">
+        <div class="plan__media" role="img" aria-label="{{ p.name }} coop"
+             style="background-image: url('{{ url_for('static', filename='img/home/image-' ~ (loop.index + 18) ~ '.webp') }}')"></div>
+        <div class="plan__body">
+          <h3 class="plan__title">{{ p.name }}</h3>
+          <p class="plan__spec"><strong>Size:</strong> {{ p.size }}</p>
+          <p class="plan__spec"><strong>Capacity:</strong> {{ p.capacity }}</p>
+          <p class="plan__spec"><strong>Price:</strong> {{ p.price }}</p>
+          <p class="plan__desc">{{ p.desc }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="delivery">
+  <div class="delivery__inner container">
+    <div class="delivery__head">
+      <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+      <h2 class="delivery__title">
+        Delivered, installed, and anchored.
+        <em>You don't lift a hammer.</em>
+      </h2>
+    </div>
+    <div class="delivery__body">
+      <p>
+        Free delivery and installation within Broward, Miami-Dade, and
+        Homestead. Anywhere else in Florida, we deliver for a flat $2 per mile
+        beyond our included service area.
+      </p>
+      <p>
+        Every coop is delivered fully built, placed exactly where you want it,
+        and anchored to the ground as part of the install. We walk you through
+        every feature before we leave.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+    <h2 class="cta__title">Built to <em>outlast</em> the flock.</h2>
+    <p class="cta__sub">When you're ready, we'll build yours.</p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+        Place a Deposit <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Area | Florida Chicken Coops{% endblock %}
+{% block body_class %}service-area{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/service-area/service-area-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Statewide Delivery · Built in Florida</p>
+    <h1 class="page-hero__title page-hero__title--stack">
+      Premium Chicken Coops
+      <em>Delivered Across Florida.</em>
+    </h1>
+    <p class="page-hero__lead">
+      Built in Florida for Florida weather — hurricane-rated chicken coops
+      delivered turnkey throughout Miami, Palm Beach, Naples, Tampa Bay, Orlando,
+      Jacksonville, the Florida Keys, and beyond.
+    </p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="standard">
+  <div class="standard__inner container">
+    <div class="standard__head">
+      <p class="eyebrow">Built for Here</p>
+      <h2 class="standard__title">Over-engineered for Florida's <em>Heat, Humidity &amp; Hurricane Season.</em></h2>
+    </div>
+    <div class="standard__body">
+      <p class="standard__text">
+        Florida Chicken Coops builds premium backyard chicken coops specifically
+        engineered for Florida's climate — from the humidity and salt air of the
+        coast to the intense summer heat and hurricane exposure found across the
+        state. Every coop is constructed using ground-contact-rated lumber,
+        corrosion-resistant hardware, hurricane connectors, and
+        galvanized-after-welding mesh designed to withstand Florida weather
+        long-term.
+      </p>
+      <p class="standard__text">
+        Most backyard coops are designed for mild climates and shipped
+        nationwide. Ours are built in Florida, by people who understand what
+        Florida weather does to outdoor structures over time.
+      </p>
+      <p class="accent-statement">
+        We deliver fully assembled coops directly to your property, anchor them
+        securely in place, and walk you through every feature before we leave.
+      </p>
+      <div class="standard__actions">
+        <a class="btn btn--dark" href="{{ contact.cta.url }}">
+          <span class="btn-label-full">Request a Florida Quote</span>
+          <span class="btn-label-short">Request a Quote</span>
+        </a>
+        <a class="btn btn--outline-dark" href="/our-coops">
+          Explore Our Coops <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="quote">
+  <div class="container">
+    <blockquote class="quote__text">
+      &ldquo;Built specifically for Florida's heat, humidity, storms, salt air,
+      and hurricane season — because a coop designed for another state won't
+      survive here long-term.&rdquo;
+    </blockquote>
+  </div>
+</section>
+
+<section class="regions">
+  {% set regions = [
+    {
+      "eyebrow": "Miami / Broward", "prefix": "in", "place": "Miami & Broward County", "img": "region-miami.jpg",
+      "lead": "Over-engineered, hurricane-rated chicken coops — built in Florida, delivered turnkey across South Florida. Free delivery and installation within Miami-Dade, Broward, and Homestead.",
+      "text": "Florida Chicken Coops serves families across South Florida — from Coral Gables to Coral Springs, Homestead to Hollywood, Pinecrest to Parkland. Every coop we build is engineered specifically for South Florida's coastal humidity, sustained heat, and hurricane season — using ground-contact-rated lumber, hurricane connectors, corrosion-resistant hardware, and galvanized-after-welding mesh that survives our climate.",
+      "statement": "We deliver fully built coops to your backyard, anchor them in place, and walk you through every feature.",
+      "cta": "Request a South Florida Quote"
+    },
+    {
+      "eyebrow": "Naples", "prefix": "in", "place": "Naples & Southwest Florida", "img": "region-naples.jpg",
+      "lead": "Custom-built luxury chicken coops delivered and installed throughout Naples and Southwest Florida.",
+      "text": "Florida Chicken Coops proudly serves families throughout Naples, Bonita Springs, Fort Myers, and surrounding Southwest Florida communities. Our coops are specifically designed for Florida's coastal conditions — resisting moisture, corrosion, intense UV exposure, and storm conditions year-round.",
+      "statement": "Every coop is delivered fully assembled, professionally anchored, and ready for immediate use with zero hassle for homeowners.",
+      "cta": "Request a Southwest Florida Quote"
+    },
+    {
+      "eyebrow": "Tampa Bay", "prefix": "in", "place": "Tampa Bay", "img": "region-tampa.jpg",
+      "lead": "Hurricane-rated backyard chicken coops delivered turnkey across Tampa, St. Petersburg, and Clearwater.",
+      "text": "Florida Chicken Coops serves homeowners across the Tampa Bay area with premium coops engineered for Florida's Gulf Coast climate. From Tampa and St. Petersburg to Clearwater and Brandon, our coops are built to withstand high humidity, salt air exposure, heavy storms, and year-round heat.",
+      "statement": "Each structure combines architectural design with heavy-duty materials including pressure-treated lumber, galvanized mesh, and reinforced framing systems built for Florida weather.",
+      "cta": "Request a Tampa Bay Quote"
+    },
+    {
+      "eyebrow": "Orlando", "prefix": "in", "place": "Orlando & Central Florida", "img": "region-orlando.jpg",
+      "lead": "Professionally built chicken coops designed for Florida heat, storms, and backyard living.",
+      "text": "Florida Chicken Coops serves families across Orlando and Central Florida including Winter Park, Windermere, Lake Nona, Clermont, and surrounding communities. Our coops are engineered for Florida's intense summer heat, heavy rainfall, and storm season while maintaining a refined, modern appearance.",
+      "statement": "We deliver every coop turnkey — fully assembled, professionally installed, and ready for your flock the same day.",
+      "cta": "Request an Orlando Quote"
+    },
+    {
+      "eyebrow": "Sarasota", "prefix": "in", "place": "Sarasota", "img": "region-sarasota.jpg",
+      "lead": "High-end backyard chicken coops built for Sarasota's coastal climate and luxury homes.",
+      "text": "Florida Chicken Coops serves Sarasota, Lakewood Ranch, Venice, and surrounding Gulf Coast communities with custom-designed coops engineered specifically for Florida weather. Our builds use premium materials that resist moisture, corrosion, predators, and hurricane-force conditions while blending beautifully into residential landscapes.",
+      "statement": "Every installation is completed turnkey so homeowners can enjoy a stress-free experience from delivery to setup.",
+      "cta": "Request a Sarasota Quote"
+    },
+    {
+      "eyebrow": "Jacksonville", "prefix": "in", "place": "Jacksonville", "img": "region-jacksonville.jpg",
+      "lead": "Durable, Florida-built chicken coops delivered and installed across Jacksonville and Northeast Florida.",
+      "text": "Florida Chicken Coops proudly serves Jacksonville, Ponte Vedra, St. Augustine, and Northeast Florida with premium backyard coops engineered for durability and long-term performance. Built to handle Florida's humidity, storms, and changing seasonal conditions, our coops combine structural strength with clean architectural design.",
+      "statement": "Each coop is delivered fully assembled and professionally installed for immediate use.",
+      "cta": "Request a Jacksonville Quote"
+    },
+    {
+      "eyebrow": "Jupiter / Treasure Coast", "prefix": "on the", "place": "Treasure Coast", "img": "region-treasure.jpg",
+      "lead": "Luxury chicken coops delivered turnkey throughout Jupiter, Port St. Lucie, Stuart, and the Treasure Coast.",
+      "text": "Florida Chicken Coops serves homeowners throughout the Treasure Coast with premium coops designed for Florida's coastal environment. From Jupiter and Stuart to Port St. Lucie and Vero Beach, our coops are engineered to resist salt air, humidity, heavy rain, and hurricane conditions while maintaining a polished residential appearance.",
+      "statement": "We handle delivery, anchoring, and full installation so your coop arrives ready for immediate use.",
+      "cta": "Request a Treasure Coast Quote"
+    },
+    {
+      "eyebrow": "Florida Keys", "prefix": "in the", "place": "Florida Keys", "img": "region-keys.jpg",
+      "lead": "Coastal-ready chicken coops engineered for the extreme weather conditions of the Florida Keys.",
+      "text": "Florida Chicken Coops serves homeowners throughout the Florida Keys with durable, hurricane-conscious coop designs built specifically for island conditions. From Key Largo to Key West, our coops are constructed using corrosion-resistant hardware, reinforced framing systems, and premium materials selected to withstand salt air, wind exposure, humidity, and tropical weather.",
+      "statement": "Every coop is delivered turnkey and professionally anchored for long-term performance in coastal environments.",
+      "cta": "Request a Florida Keys Quote"
+    }
+  ] %}
+
+  {% for r in regions %}
+  <article class="region">
+    <div class="region__inner container">
+      <div class="region__body">
+        <p class="eyebrow">{{ r.eyebrow }}</p>
+        <h2 class="region__title">Premium Chicken Coops {{ r.prefix }} <em>{{ r.place }}</em></h2>
+        <p class="region__text">{{ r.lead }}</p>
+        <p class="region__text">{{ r.text }}</p>
+        <p class="accent-statement">{{ r.statement }}</p>
+        <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+          <span class="btn-label-full">{{ r.cta }}</span>
+          <span class="btn-label-short">Request a Quote</span>
+          <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+      <div class="region__media" role="img" aria-label="Coop installed in {{ r.place }}"
+           style="background-image: url('{{ url_for('static', filename='img/service-area/image-' ~ loop.index ~ '.webp') }}')"></div>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+<section class="sizes">
+  <div class="sizes__inner container">
+    <div class="sizes__header">
+      <h2 class="sizes__title">
+        Three standard sizes.
+        <em>Custom builds welcome.</em>
+      </h2>
+      <div class="sizes__intro">
+        <p>
+          Every model is built with the same materials, the same standards, and
+          the same structural integrity. The only difference is size.
+        </p>
+        <a class="btn btn--outline" href="/our-coops">
+          See Pricing &amp; Order <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+
+    {% set plans = [
+      {"name": "Small",  "size": "8′ × 6′",  "capacity": "8–10 hens",  "price": "$5,900", "desc": "Ideal for compact backyards and first-time flock owners."},
+      {"name": "Medium", "size": "12′ × 6′", "capacity": "12–14 hens", "price": "$6,499", "desc": "Our most popular model. The perfect balance of space, presence, & value."},
+      {"name": "Large",  "size": "16′ × 6′", "capacity": "16–20 hens", "price": "$6,900", "desc": "Maximum space for serious backyard setups. Built for the long haul."}
+    ] %}
+
+    <div class="sizes__grid">
+      {% for p in plans %}
+      <article class="plan">
+        <div class="plan__media" role="img" aria-label="{{ p.name }} coop"
+             style="background-image: url('{{ url_for('static', filename='img/home/image-' ~ (loop.index + 18) ~ '.webp') }}')"></div>
+        <div class="plan__body">
+          <h3 class="plan__title">{{ p.name }}</h3>
+          <p class="plan__spec"><strong>Size:</strong> {{ p.size }}</p>
+          <p class="plan__spec"><strong>Capacity:</strong> {{ p.capacity }}</p>
+          <p class="plan__spec"><strong>Price:</strong> {{ p.price }}</p>
+          <p class="plan__desc">{{ p.desc }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+    <h2 class="cta__title">Ready for a coop in <em>Florida?</em></h2>
+    <p class="cta__text">
+      Reach out for a quote — we'll confirm delivery details for your address,
+      talk through which model makes sense for your yard, and get you on the
+      build schedule.
+    </p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+        Place a Deposit <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

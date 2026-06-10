@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}FAQs | Florida Chicken Coops{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/faq/faq-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">FAQ</p>
+    <h1 class="page-hero__title">
+      Questions we get from <em>Florida families.</em>
+    </h1>
+    <p class="page-hero__lead">Frequently Asked Questions</p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="faq">
+  {% set faqs = [
+    {"q": "How long will a Florida Chicken Coop last?", "a": "Built with the materials and methods we use, the structure itself will last decades. The pressure-treated foundation lumber, cedar or cypress siding, insulated metal roof, and corrosion-resistant hardware are all specified for long-term performance in Florida's climate. We build it to outlast the flock — and the next several flocks after that."},
+    {"q": "How many hens can I keep?", "a": "Small: up to 6 hens. Medium: 6–10 hens. Large: 10–15 hens. Custom builds available for larger flocks."},
+    {"q": "Is keeping chickens legal where I live?", "a": "Most Florida municipalities allow backyard hens with reasonable limits — and most prohibit roosters within residential zones. We'll help you confirm your local ordinance during the design conversation. Miami-Dade, Broward, Palm Beach, Orange, Hillsborough, and most major Florida counties permit backyard flocks."},
+    {"q": "What's included in the price?", "a": "Every standard model includes the fully built coop, delivery, on-site placement, and ground anchoring within Broward, Miami-Dade, and Homestead. Statewide delivery is available for $2 per mile beyond our included service area."},
+    {"q": "How long does it take to receive my coop?", "a": "Lead times vary by season and order volume. We'll quote a delivery window during your initial conversation."},
+    {"q": "What happens during a hurricane?", "a": "Our coops are engineered with Simpson Strong-Tie hurricane connectors and ground-anchored at installation — built to withstand significant wind loads. For named hurricanes, we still recommend bringing your flock indoors temporarily (a garage works fine), but the structure itself is designed to stay put."},
+    {"q": "Why is the coop fully open inside?", "a": "Florida's heat and humidity require maximum airflow. Closed coops trap ammonia, moisture, and bacteria — the root cause of most flock health issues in our climate. Our open design eliminates dead air zones and dramatically reduces disease risk. It's also far easier to clean."},
+    {"q": "Can I customize my coop?", "a": "Yes. Custom sizes, finishes, and configurations are available — contact us for a custom quote."},
+    {"q": "Do you offer financing?", "a": "[To be confirmed by client.]"},
+    {"q": "Where do you deliver?", "a": "Statewide Florida. Delivery is included within Broward, Miami-Dade, and Homestead. Anywhere else in Florida, delivery is $2 per mile."}
+  ] %}
+  <div class="faq__inner">
+    {% for item in faqs %}
+    <details class="faq__item">
+      <summary class="faq__trigger">
+        <span class="faq__q">{{ item.q }}</span>
+        <svg class="faq__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </summary>
+      <div class="faq__panel">
+        <p class="faq__a">{{ item.a }}</p>
+      </div>
+    </details>
+    {% endfor %}
+  </div>
+
+  <span class="faq__watermark" aria-hidden="true"></span>
+</section>
+{% endblock %}

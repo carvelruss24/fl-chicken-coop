@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Request a Quote | Florida Chicken Coops{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/contact/contact-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Request a Quote</p>
+    <h1 class="page-hero__title">Ready <em>when you are.</em></h1>
+    <p class="page-hero__lead">
+      Tell us about your yard and your flock. We'll respond within one business
+      day with pricing, a delivery window, and next steps.
+    </p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="contact">
+  <div class="contact__inner container">
+    <div class="contact__intro">
+      <p class="eyebrow">Get in Touch</p>
+      <h2 class="contact__title">Tell us about your yard <em>and your flock</em></h2>
+    </div>
+
+    <div class="contact__form-wrap">
+      {% if submitted %}
+      <div class="contact__success" role="status">
+        <h3>Thank you — your request is in.</h3>
+        <p>
+          We'll be in touch within one business day with pricing, a delivery
+          window, and next steps.
+        </p>
+      </div>
+      {% else %}
+      <form class="contact__form" method="post" action="{{ url_for('contact') }}">
+        <div class="form-row">
+          <div class="field">
+            <label for="name">Name <span class="req">*</span></label>
+            <input type="text" id="name" name="name" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="email">Email <span class="req">*</span></label>
+            <input type="email" id="email" name="email" autocomplete="email" required />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label for="phone">Phone <span class="req">*</span></label>
+            <input type="tel" id="phone" name="phone" autocomplete="tel" required />
+          </div>
+          <div class="field">
+            <label for="city">City <span class="req">*</span></label>
+            <input type="text" id="city" name="city" autocomplete="address-level2" required />
+          </div>
+        </div>
+        <div class="field">
+          <label for="size">Which size are you considering?</label>
+          <select id="size" name="size">
+            <option value="" selected>eg. The Small Coop</option>
+            <option value="small">Small — 8′ × 6′</option>
+            <option value="medium">Medium — 12′ × 6′</option>
+            <option value="large">Large — 16′ × 6′</option>
+            <option value="custom">Custom build</option>
+            <option value="unsure">Not sure yet</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="notes">Anything we should know?</label>
+          <textarea id="notes" name="notes" rows="3" placeholder="Yard size, existing features, question about delivery…"></textarea>
+        </div>
+        <button class="btn btn--dark contact__submit" type="submit">Request a Quote</button>
+        <p class="contact__note">No high-pressure follow-up. Just clear answers from the people who build them.</p>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <span class="contact__watermark" aria-hidden="true"></span>
+</section>
+{% endblock %}

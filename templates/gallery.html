@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Gallery | Florida Chicken Coops{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/our-models/our-models-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Gallery</p>
+    <h1 class="page-hero__title">
+      Installed <em>across Florida.</em>
+    </h1>
+    <p class="page-hero__lead">
+      Real coops, in real backyards — from Homestead to Jupiter, Naples to the
+      Keys. Browse recent installations and see how each one looks settled into
+      its yard.
+    </p>
+  </div>
+
+  <div class="filter-bar">
+    <div class="filter-bar__inner container">
+      <span class="filter-bar__label">Filter by Region</span>
+      {% set regions = [
+        {"id": "all", "label": "All"},
+        {"id": "south-florida", "label": "South Florida"},
+        {"id": "treasure-coast", "label": "Treasure Coast"},
+        {"id": "southwest-florida", "label": "Southwest Florida"},
+        {"id": "central-florida", "label": "Central Florida"},
+        {"id": "statewide", "label": "Statewide"}
+      ] %}
+      <div class="filter-bar__options" role="group" aria-label="Filter gallery by region">
+        {% for r in regions %}
+        <button type="button"
+                class="filter-bar__btn{% if loop.first %} is-active{% endif %}"
+                data-region="{{ r.id }}"
+                aria-pressed="{{ 'true' if loop.first else 'false' }}">
+          {{ r.label }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="gallery">
+  {% set regions_cycle = ["south-florida", "treasure-coast", "southwest-florida", "central-florida", "statewide"] %}
+  <div class="gallery__grid">
+    {% for i in range(1, 14) %}
+    {% set region = regions_cycle[(i - 1) % regions_cycle|length] %}
+    <figure class="gallery__item" data-region="{{ region }}">
+      <div class="gallery__media" role="img" aria-label="Installed Florida Chicken Coop"
+           style="background-image: url('{{ url_for('static', filename='img/our-models/image-' ~ i ~ '.webp') }}')"></div>
+      <figcaption class="gallery__caption">
+        <span class="gallery__loc">Location, FL</span>
+        <span class="gallery__model">The Model · 12×6</span>
+      </figcaption>
+    </figure>
+    {% endfor %}
+  </div>
+
+  <div class="gallery__footer">
+    <nav class="pagination" aria-label="Gallery pages">
+      <button class="pagination__btn" type="button" disabled aria-label="Previous page">&larr;</button>
+      <button class="pagination__btn is-active" type="button" aria-current="page">1</button>
+      <button class="pagination__btn" type="button" disabled>2</button>
+      <button class="pagination__btn" type="button" disabled aria-label="Next page">&rarr;</button>
+    </nav>
+    <p class="gallery__count">Showing 1–13 of 13</p>
+  </div>
+</section>
+{% endblock %}

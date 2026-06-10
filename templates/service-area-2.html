@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Service Area | Florida Chicken Coops{% endblock %}
+{% block body_class %}service-area{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/service-area/service-area-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Statewide Delivery · Built in Florida</p>
+    <h1 class="page-hero__title page-hero__title--stack">
+      Premium Chicken Coops
+      <em>Delivered Across Florida.</em>
+    </h1>
+    <p class="page-hero__lead">
+      Built in Florida for Florida weather — hurricane-rated chicken coops
+      delivered turnkey throughout Miami, Palm Beach, Naples, Tampa Bay, Orlando,
+      Jacksonville, the Florida Keys, and beyond.
+    </p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="standard">
+  <div class="standard__inner container">
+    <div class="standard__head">
+      <p class="eyebrow">Built for Here</p>
+      <h2 class="standard__title">Over-engineered for Florida's <em>Heat, Humidity &amp; Hurricane Season.</em></h2>
+    </div>
+    <div class="standard__body">
+      <p class="standard__text">
+        Florida Chicken Coops builds premium backyard chicken coops specifically
+        engineered for Florida's climate — from the humidity and salt air of the
+        coast to the intense summer heat and hurricane exposure found across the
+        state. Every coop is constructed using ground-contact-rated lumber,
+        corrosion-resistant hardware, hurricane connectors, and
+        galvanized-after-welding mesh designed to withstand Florida weather
+        long-term.
+      </p>
+      <p class="standard__text">
+        Most backyard coops are designed for mild climates and shipped
+        nationwide. Ours are built in Florida, by people who understand what
+        Florida weather does to outdoor structures over time.
+      </p>
+      <p class="accent-statement">
+        We deliver fully assembled coops directly to your property, anchor them
+        securely in place, and walk you through every feature before we leave.
+      </p>
+      <div class="standard__actions">
+        <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Florida Quote</a>
+        <a class="btn btn--outline-dark" href="/our-coops">
+          Explore Our Coops <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="quote">
+  <div class="container">
+    <blockquote class="quote__text">
+      &ldquo;Built specifically for Florida's heat, humidity, storms, salt air,
+      and hurricane season — because a coop designed for another state won't
+      survive here long-term.&rdquo;
+    </blockquote>
+  </div>
+</section>
+
+<section class="coverage">
+  <div class="coverage__inner container">
+    <div class="coverage__body">
+      <p class="eyebrow">Where We Deliver in Florida</p>
+      <h2 class="coverage__title">Every city. <em>One standard.</em></h2>
+      <p class="coverage__lead">
+        Over-engineered, hurricane-rated chicken coops — built in Florida,
+        delivered turnkey across South Florida. Free delivery and installation
+        within Miami-Dade, Broward, and Homestead.
+      </p>
+
+      {# Sequential order: South-Florida service area first, then the rest.
+         The grid below fills column-first, so desktop still reads as two
+         columns (col 1 = first 6, col 2 = last 5) while mobile stacks this
+         list in this exact top-to-bottom order. #}
+      {% set cities = [
+        "Miami", "Broward County", "Homestead", "Florida Keys", "Palm Beach County", "Jupiter & the Treasure Coast",
+        "Naples", "Sarasota", "Orlando", "Tampa Bay", "Jacksonville"
+      ] %}
+      <ul class="coverage__cities">
+        {% for c in cities %}
+        <li class="coverage__city">{{ c }}</li>
+        {% endfor %}
+      </ul>
+
+      <div class="coverage__notes">
+        <p class="coverage__note coverage__note--yes">
+          <span class="coverage__ico" aria-hidden="true">&check;</span>
+          Free delivery &amp; installation included
+        </p>
+        <p class="coverage__note coverage__note--fee">
+          <span class="coverage__ico" aria-hidden="true">!</span>
+          All other cities: $2/mile from our service area
+        </p>
+      </div>
+
+      <p class="coverage__fine">
+        If your city isn't on this list, it doesn't mean we can't reach you — it
+        means delivery pricing varies. Anywhere in Florida is reachable at $2 per
+        mile beyond our included service area. Reach out and we'll confirm the
+        exact cost for your address.
+      </p>
+    </div>
+
+    <div class="coverage__map">
+      <img class="coverage__map-img"
+           src="{{ url_for('static', filename='img/service-area/service-area-map.webp') }}"
+           alt="Map of Florida showing the cities we deliver to" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section class="sizes">
+  <div class="sizes__inner container">
+    <div class="sizes__header">
+      <h2 class="sizes__title">
+        Three standard sizes.
+        <em>Custom builds welcome.</em>
+      </h2>
+      <div class="sizes__intro">
+        <p>
+          Every model is built with the same materials, the same standards, and
+          the same structural integrity. The only difference is size.
+        </p>
+        <a class="btn btn--outline" href="/our-coops">
+          See Pricing &amp; Order <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+
+    {% set plans = [
+      {"name": "Small",  "size": "8′ × 6′",  "capacity": "8–10 hens",  "price": "$5,900", "desc": "Ideal for compact backyards and first-time flock owners."},
+      {"name": "Medium", "size": "12′ × 6′", "capacity": "12–14 hens", "price": "$6,499", "desc": "Our most popular model. The perfect balance of space, presence, & value."},
+      {"name": "Large",  "size": "16′ × 6′", "capacity": "16–20 hens", "price": "$6,900", "desc": "Maximum space for serious backyard setups. Built for the long haul."}
+    ] %}
+
+    <div class="sizes__grid">
+      {% for p in plans %}
+      <article class="plan">
+        <div class="plan__media" role="img" aria-label="{{ p.name }} coop"
+             style="background-image: url('{{ url_for('static', filename='img/home/image-' ~ (loop.index + 18) ~ '.webp') }}')"></div>
+        <div class="plan__body">
+          <h3 class="plan__title">{{ p.name }}</h3>
+          <p class="plan__spec"><strong>Size:</strong> {{ p.size }}</p>
+          <p class="plan__spec"><strong>Capacity:</strong> {{ p.capacity }}</p>
+          <p class="plan__spec"><strong>Price:</strong> {{ p.price }}</p>
+          <p class="plan__desc">{{ p.desc }}</p>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+    <h2 class="cta__title">Ready for a coop in <em>Florida?</em></h2>
+    <p class="cta__text">
+      Reach out for a quote — we'll confirm delivery details for your address,
+      talk through which model makes sense for your yard, and get you on the
+      build schedule.
+    </p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+        Place a Deposit <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

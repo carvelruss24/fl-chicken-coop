@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Decorative frond/feather strokes used as a faint background texture behind
+  dark sections. Color is set here; subtlety is controlled with CSS opacity.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 260" fill="none" aria-hidden="true">
+  <g stroke="#c5a06a" stroke-width="7" stroke-linecap="round">
+    <path d="M24 238 C 64 158, 96 92, 184 34"/>
+    <path d="M24 238 C 74 184, 116 122, 172 72"/>
+    <path d="M24 238 C 52 150, 74 82, 126 22"/>
+  </g>
+</svg>

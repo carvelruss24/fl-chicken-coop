@@ -1,0 +1,2672 @@
+/* ==========================================================================
+   style.css — main stylesheet
+   Design tokens (colors, type, spacing) live here as CSS custom properties.
+   We'll tune these to match your design as more mockups come in.
+   ========================================================================== */
+
+:root {
+  /* --- Brand color palette (Florida Chicken Coops) --- */
+  --color-bg: #ffffff;
+  --color-text: #1a1a1a;
+  --color-muted: #6b7280;
+
+  --color-gold: #c5a06a;          /* brand gold — logo, headings, accents */
+  --color-gold-light: #d8b985;    /* lighter gold for hover / dark-bg focus */
+  --color-dark: #2c2416;          /* dark brown — footer bg, buttons */
+  --color-dark-soft: #2e2823;     /* slightly lifted dark for hovers */
+  --color-cream: #f7f3ec;         /* warm off-white — light section bg, solid buttons */
+
+  /* Aliases so generic component styles still resolve */
+  --color-primary: var(--color-gold);
+  --color-primary-dark: var(--color-dark);
+  --color-accent: var(--color-gold);
+  --color-border: #e8e8e8;
+
+  /* Header & footer specifics */
+  --header-height: 84px;
+  --nav-link: #3a3a3a;
+  --footer-text: #b7b1a8;
+  --footer-link: #d3cdc4;
+  --footer-dim: #8c867d;
+  --footer-rule: rgba(255, 255, 255, 0.12);
+
+  /* --- Typography --- */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-body);
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
+  --fs-base: 1rem;
+  --lh-base: 1.6;
+
+  /* --- Fluid type scale (clamp: min, preferred, max) --- */
+  --fs-sm: clamp(0.875rem, 0.85rem + 0.2vw, 1rem);
+  --fs-md: clamp(1rem, 0.95rem + 0.3vw, 1.125rem);
+  --fs-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --fs-xl: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem);
+  --fs-2xl: clamp(2.25rem, 1.7rem + 2.5vw, 3.75rem);
+
+  /* --- Spacing scale --- */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+
+  /* --- Layout --- */
+  --container-max: 1200px;
+  --container-pad: clamp(1rem, 5vw, 3rem);
+
+  /* --- Misc --- */
+  --radius: 0.5rem;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --transition: 0.25s ease;
+}
+
+/* --------------------------------------------------------------------------
+   Base elements
+   -------------------------------------------------------------------------- */
+html {
+  /* So in-page anchors (and the skip link) clear the sticky header. */
+  scroll-padding-top: var(--header-height);
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  line-height: var(--lh-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+}
+
+a {
+  color: var(--color-primary);
+  transition: color var(--transition);
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--color-primary-dark);
+}
+
+/* Visible focus outline for keyboard users (dark = high contrast on light bg) */
+:focus-visible {
+  outline: 3px solid var(--color-dark);
+  outline-offset: 2px;
+}
+
+/* --------------------------------------------------------------------------
+   Layout helpers
+   -------------------------------------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+
+.section {
+  padding-block: var(--space-2xl);
+}
+
+/* Accessible visually-hidden utility (for screen-reader-only text) */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ==========================================================================
+   SITE HEADER  —  .site-header
+   NOTE: keep every ancestor of .site-header at overflow:visible — a clipped
+   or height-constrained ancestor silently disables position:sticky.
+   ========================================================================== */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  /* Transparent over the hero by default; turns solid on scroll (.is-scrolled).
+     Every page opens with a full-bleed dark hero, so this applies site-wide. */
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background var(--transition), border-color var(--transition),
+              box-shadow var(--transition);
+}
+
+/* Skip link — first focusable element, visible only when focused */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -64px;
+  z-index: 1100;
+  background: var(--color-dark);
+  color: #fff;
+  padding: 0.65rem 1.1rem;
+  border-radius: 6px;
+  transition: top var(--transition);
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Equal 1fr side tracks => the centre (auto) track is truly header-centered. */
+.header-inner {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: var(--header-height);
+  max-width: 1440px;
+}
+
+/* Brand / logo */
+.brand {
+  grid-column: 1;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+}
+.brand img {
+  height: 52px;
+  width: auto;
+}
+
+/* nav + button share a wrapper so they collapse together on mobile;
+   display:contents lets them sit directly in the header grid on desktop. */
+.nav-wrap {
+  display: contents;
+}
+
+.primary-nav {
+  grid-column: 2;
+  justify-self: center;
+}
+.primary-nav ul {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 1.6vw, 1.6rem);
+}
+.primary-nav a {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--nav-link);
+  white-space: nowrap;
+  padding-block: 0.4rem;
+  transition: color var(--transition);
+}
+.primary-nav a:hover,
+.primary-nav a:focus-visible {
+  color: var(--color-dark);
+}
+.primary-nav a.is-active {
+  color: var(--color-dark);
+  font-weight: 800;
+}
+
+/* Contact button */
+.btn-contact {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-block;
+  background: var(--color-dark);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 0.9rem 1.6rem;
+  border: 1.5px solid transparent;   /* keeps width stable when overlay header adds an outline */
+  border-radius: 8px;
+  transition: background var(--transition), color var(--transition),
+              border-color var(--transition);
+}
+.btn-contact:hover,
+.btn-contact:focus-visible {
+  background: var(--color-gold);
+  color: var(--color-dark);
+}
+
+/* Hamburger toggle (hidden on desktop, shown on mobile) */
+.nav-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+.nav-toggle__bars,
+.nav-toggle__bars::before,
+.nav-toggle__bars::after {
+  content: "";
+  display: block;
+  width: 26px;
+  height: 2px;
+  background: var(--color-dark);
+  transition: transform var(--transition), opacity var(--transition);
+}
+.nav-toggle__bars {
+  position: relative;
+}
+.nav-toggle__bars::before {
+  position: absolute;
+  top: -8px;
+  left: 0;
+}
+.nav-toggle__bars::after {
+  position: absolute;
+  top: 8px;
+  left: 0;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars {
+  background: transparent;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::before {
+  transform: translateY(8px) rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bars::after {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+/* --- Header: mobile layout (matches footer's first breakpoint) --- */
+@media (max-width: 900px) {
+  .header-inner {
+    display: flex;
+    align-items: center;
+  }
+  .nav-toggle {
+    display: inline-flex;
+    margin-left: auto;
+  }
+
+  .nav-wrap {
+    display: block;                  /* override display:contents */
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: var(--color-bg);
+    box-shadow: var(--shadow);
+    padding-inline: var(--container-pad);
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.32s ease;
+  }
+  .nav-wrap.is-open {
+    max-height: 80vh;
+  }
+
+  .primary-nav ul {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .primary-nav a {
+    padding-block: 0.95rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-contact {
+    display: block;
+    text-align: center;
+    margin-block: var(--space-sm);
+  }
+}
+
+/* ==========================================================================
+   TRANSPARENT OVERLAY HEADER  —  all pages
+   Every page opens with a full-bleed dark hero (.hero on home, .page-hero on
+   subpages). The hero slides up beneath the sticky header (negative margin on
+   <main>), so the header starts transparent over the photo, then fades to
+   solid white once the page is scrolled. The .is-scrolled class is toggled in
+   main.js; the fade itself is the .site-header transition above.
+   ========================================================================== */
+main {
+  margin-top: calc(-1 * var(--header-height));
+}
+
+.site-header.is-scrolled {
+  background: var(--color-bg);
+  border-bottom-color: var(--color-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+/* Mobile: drop the header's bottom hairline even when solid (the scrolled
+   shadow provides the separation). Desktop keeps its border once scrolled. */
+@media (max-width: 900px) {
+  .site-header.is-scrolled {
+    border-bottom-color: transparent;
+  }
+}
+
+/* Hamburger bars read white over the photo (toggle only shows on mobile). */
+.site-header:not(.is-scrolled) .nav-toggle__bars,
+.site-header:not(.is-scrolled) .nav-toggle__bars::before,
+.site-header:not(.is-scrolled) .nav-toggle__bars::after {
+  background: #fff;
+}
+
+/* Desktop: nav links + contact button sit directly on the photo, so go light.
+   On mobile they live inside the white dropdown, so they stay dark. */
+@media (min-width: 901px) {
+  .site-header:not(.is-scrolled) .primary-nav a {
+    color: rgba(255, 255, 255, 0.88);
+  }
+  .site-header:not(.is-scrolled) .primary-nav a:hover,
+  .site-header:not(.is-scrolled) .primary-nav a:focus-visible,
+  .site-header:not(.is-scrolled) .primary-nav a.is-active {
+    color: #fff;
+  }
+
+  .site-header:not(.is-scrolled) .btn-contact {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.6);
+    color: #fff;
+  }
+  .site-header:not(.is-scrolled) .btn-contact:hover,
+  .site-header:not(.is-scrolled) .btn-contact:focus-visible {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: #fff;
+    color: #fff;
+  }
+}
+
+/* ==========================================================================
+   SITE FOOTER  —  .site-footer
+   ========================================================================== */
+.site-footer {
+  background: #221d1a;          /* original warm near-black, kept dark for the footer */
+  color: var(--footer-text);
+}
+
+/* Gold focus ring inside the dark footer (high contrast on charcoal) */
+.site-footer :focus-visible {
+  outline-color: var(--color-gold-light);
+}
+
+.footer-inner {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr 1fr 1fr;
+  gap: var(--space-xl) var(--space-lg);
+  padding-block: var(--space-2xl) var(--space-lg);
+  max-width: 1440px;
+}
+
+.footer-brand {
+  max-width: 340px;
+}
+.brand--footer img {
+  height: 92px;
+  width: auto;
+}
+.footer-tagline {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  color: var(--color-gold);
+  font-size: var(--fs-lg);
+  margin-top: var(--space-md);
+}
+.footer-blurb {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-top: var(--space-sm);
+  color: var(--footer-text);
+}
+
+.footer-heading {
+  color: var(--color-gold);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-md);
+}
+.footer-col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.footer-col a {
+  color: var(--footer-link);
+  font-size: 0.92rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition: color var(--transition);
+}
+.footer-col a:hover,
+.footer-col a:focus-visible {
+  color: var(--color-gold);
+}
+
+/* Bottom bar: copyright + contact */
+.footer-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  padding-block: var(--space-md);
+  border-top: 1px solid var(--footer-rule);
+  font-size: 0.85rem;
+  color: var(--footer-dim);
+  max-width: 1440px;
+}
+.footer-contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+}
+.footer-contact a {
+  color: var(--footer-dim);
+  transition: color var(--transition);
+}
+.footer-contact a:hover,
+.footer-contact a:focus-visible {
+  color: var(--color-gold);
+}
+
+/* --- Footer: responsive (first step aligned with header @ 900px) --- */
+@media (max-width: 900px) {
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+  }
+  .footer-brand {
+    grid-column: 1 / -1;
+    max-width: 460px;
+  }
+}
+@media (max-width: 520px) {
+  /* Single centered column on phones. */
+  .footer-inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+    justify-items: center;
+    text-align: center;
+  }
+  .footer-brand {
+    max-width: none;
+  }
+  /* Center the logo + the link lists within each centered column. */
+  .footer-col ul {
+    align-items: center;
+  }
+  /* Stack the bottom bar: copyright over the contact details, all centered. */
+  .footer-bottom {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-md);
+  }
+  .footer-contact {
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+}
+
+/* ==========================================================================
+   BUTTONS  —  reusable CTA buttons (.btn + modifiers)
+   Used in the hero and anywhere a call-to-action is needed.
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1;
+  padding: 1.05rem 2rem;
+  border: 1.5px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition),
+              border-color var(--transition);
+}
+
+/* Solid warm-white button (primary CTA) */
+.btn--solid {
+  background: var(--color-cream);
+  border-color: var(--color-cream);
+  color: var(--color-dark);
+}
+.btn--solid:hover,
+.btn--solid:focus-visible {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-dark);
+}
+
+/* Outline button (secondary CTA, for dark/photo backgrounds) */
+.btn--outline {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.6);
+  color: #fff;
+}
+.btn--outline:hover,
+.btn--outline:focus-visible {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #fff;
+  color: #fff;
+}
+
+/* Solid dark button (primary CTA on light backgrounds) */
+.btn--dark {
+  background: var(--color-dark);
+  border-color: var(--color-dark);
+  color: #fff;
+}
+.btn--dark:hover,
+.btn--dark:focus-visible {
+  background: var(--color-gold);
+  border-color: var(--color-gold);
+  color: var(--color-dark);
+}
+
+/* Outline dark button (secondary CTA on light backgrounds) */
+.btn--outline-dark {
+  background: transparent;
+  border-color: rgba(34, 29, 26, 0.4);
+  color: var(--color-dark);
+}
+.btn--outline-dark:hover,
+.btn--outline-dark:focus-visible {
+  background: var(--color-dark);
+  border-color: var(--color-dark);
+  color: #fff;
+}
+
+/* ==========================================================================
+   HERO  —  .hero  (home page)
+   Full-bleed photo with a darkening overlay so the headline stays legible.
+   Drop the hero photo at static/img/hero.jpg; the dark fallback shows until
+   then (and behind the image if it ever fails to load).
+   ========================================================================== */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: clamp(560px, 86vh, 880px);
+  padding-block: var(--space-2xl);
+  color: #fff;
+  background: url("../img/home/home-hero-section.webp") center / cover no-repeat;
+  overflow: hidden;
+}
+
+/* Darkening overlay — even left-to-right for centered text, with a little
+   extra weight at top and bottom (keeps the transparent header legible). */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 15, 10, 0.55) 0%,
+    rgba(20, 15, 10, 0.40) 30%,
+    rgba(20, 15, 10, 0.45) 65%,
+    rgba(20, 15, 10, 0.62) 100%
+  );
+}
+
+/* Lift the content above the ::before overlay, centered in the frame. */
+.hero__inner {
+  position: relative;
+  max-width: 640px;
+  margin-inline: auto;
+  text-align: center;
+  text-shadow: 0 1px 16px rgba(0, 0, 0, 0.28);
+}
+
+/* Shared kicker/eyebrow label (gold by default; sections override the color) */
+.eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  margin-bottom: var(--space-md);
+}
+
+/* Light variant — eyebrow over a photo / dark background */
+.eyebrow--light {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.75rem, 1.8rem + 4.4vw, 5.25rem);
+  line-height: 1.06;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  margin-bottom: var(--space-md);
+}
+.hero__title em {
+  display: block;       /* the italic flourish gets its own line */
+  font-style: italic;
+  font-weight: 500;
+}
+
+.hero__lead {
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+  max-width: 46ch;
+  margin-inline: auto;
+  text-wrap: pretty;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+/* --- Hero: small screens --- */
+@media (max-width: 600px) {
+  .hero {
+    min-height: clamp(480px, 80vh, 720px);
+  }
+  .hero__actions .btn {
+    flex: 1 1 100%;     /* stack full-width buttons on narrow phones */
+  }
+}
+
+/* ==========================================================================
+   STATEMENT BAND  —  .statement  (dark value statement, home page)
+   Two columns: a display headline on the left, a supporting paragraph (with a
+   hairline above it) on the right, over a faint rooster watermark.
+   ========================================================================== */
+.statement {
+  position: relative;
+  overflow: hidden;
+  background: url("../img/home/home-frame.webp") center / cover no-repeat;
+  color: #f5f0e8;
+}
+
+.statement__inner {
+  position: relative;        /* sit above the watermark */
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(2rem, 6vw, 5.5rem);
+  align-items: center;
+  padding-block: var(--space-2xl);
+}
+
+.statement__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.1rem, 1.5rem + 2.6vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.statement__title em {
+  display: block;            /* italic line drops below */
+  font-style: italic;
+  font-weight: 500;
+}
+
+.statement__body {
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  padding-top: var(--space-md);
+}
+.statement__text {
+  max-width: 42ch;
+  font-size: var(--fs-md);
+  line-height: 1.75;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+/* --- Statement: stack on small screens --- */
+@media (max-width: 760px) {
+  .statement__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  /* Let the italic flow inline so the headline wraps as natural running text
+     instead of forcing "actually changes." onto its own line. */
+  .statement__title em {
+    display: inline;
+  }
+}
+
+/* ==========================================================================
+   FEATURE GALLERY  —  .features  (home: image + caption pairs on cream)
+   A full-bleed 2×2 grid; each feature is a square photo beside a short
+   numbered caption. Collapses to one feature per row, then stacks the photo
+   above its caption on phones.
+   ========================================================================== */
+.features {
+  background: var(--color-cream);
+  padding-block: var(--space-xl);
+}
+
+.features__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: var(--space-xl);
+  row-gap: var(--space-lg);
+  align-items: start;
+  max-width: 1600px;
+  margin-inline: auto;
+}
+
+.feature {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) 1fr;
+  column-gap: var(--space-md);
+  align-items: center;
+}
+
+.feature__media {
+  aspect-ratio: 1 / 1;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.feature__num {
+  font-size: 0.72rem;
+  margin-bottom: var(--space-xs);
+}
+
+.feature__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--color-dark);
+}
+
+.feature__text {
+  margin-top: var(--space-sm);
+  max-width: 34ch;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+/* One feature per row on mid screens. */
+@media (max-width: 900px) {
+  .features__grid {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-xl);
+    max-width: 760px;
+  }
+  /* Drop the cream top padding so the first photo meets the section above it
+     directly (no cream gap on mobile). */
+  .features {
+    padding-top: 0;
+  }
+}
+
+/* Stack photo over caption on phones. */
+@media (max-width: 560px) {
+  .feature {
+    grid-template-columns: 1fr;
+    row-gap: var(--space-md);
+  }
+  .feature__media {
+    aspect-ratio: 4 / 3;
+  }
+  /* Photos stay full-bleed; inset just the caption text so it breathes from
+     the screen edges. */
+  .feature__body {
+    padding-inline: var(--container-pad);
+  }
+}
+
+/* ==========================================================================
+   REASONS  —  .reasons  ("the why": dark band, three divided columns)
+   Centered header over a 3-column grid. Columns are split by hairline
+   dividers (created with symmetric padding + a left border, so each rule
+   lands centered in the gap). Stacks to one column on small screens.
+   ========================================================================== */
+.reasons {
+  background: var(--color-dark);
+  color: #f5f0e8;
+  padding-block: var(--space-2xl);
+}
+
+.reasons__header {
+  max-width: 880px;
+  margin-inline: auto;
+  margin-bottom: var(--space-2xl);
+  text-align: center;
+}
+.reasons__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.4rem + 2.8vw, 3.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.reasons__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.reasons__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.reason {
+  padding-inline: var(--space-lg);
+}
+.reason:first-child {
+  padding-left: 0;
+}
+.reason:last-child {
+  padding-right: 0;
+}
+.reason + .reason {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.reason__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: var(--space-md);
+  border: 1px solid rgba(197, 160, 106, 0.55);
+  border-radius: 8px;
+  color: var(--color-gold);
+}
+.reason__icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.reason__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.5rem);
+  color: #f5f0e8;
+  margin-bottom: var(--space-sm);
+}
+
+.reason__text {
+  max-width: 36ch;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+/* --- Reasons: stack on small screens --- */
+@media (max-width: 780px) {
+  .reasons__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  .reason {
+    padding-inline: 0;
+  }
+  .reason + .reason {
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: var(--space-lg);
+  }
+}
+
+/* ==========================================================================
+   DREAM BAND  —  .dream  (centered copy + tilted photos)
+   Desktop (>=1200px): four polaroids are absolutely positioned to flank the
+   centered text. Below that: the same four photos become a swipeable
+   scroll-snap carousel under the text (pure CSS — no JS). The photos are
+   decorative (the section's meaning lives in the copy), so aria-hidden.
+   ========================================================================== */
+.dream {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-cream);
+}
+
+.dream__inner {
+  position: relative;
+  z-index: 1;                         /* above the flanking photos on desktop */
+  max-width: 720px;
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  padding-block: var(--space-2xl);
+  text-align: center;
+}
+/* The copy is split out of the heading so the photo carousel can sit between
+   them on mobile. The band's vertical padding lives on the OUTER edges only,
+   so head + copy read as one centered column (photos are absolute on desktop,
+   so they don't affect this). */
+.dream__inner--head { padding-bottom: 0; }
+.dream__inner--copy { padding-top: 0; }
+/* Splitting the copy makes the first paragraph the first-of-type inside .copy,
+   which would bump its top margin to --space-lg; hold it at the original
+   --space-md so the title→body gap is unchanged from the single-block layout. */
+.dream__inner--copy .dream__text:first-of-type { margin-top: var(--space-md); }
+.dream__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.25rem, 1.6rem + 2.4vw, 3.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+.dream__title em {
+  display: block;                     /* italic line drops below */
+  font-style: italic;
+  font-weight: 500;
+}
+.dream__text {
+  margin-top: var(--space-md);
+  font-size: 0.97rem;
+  line-height: 1.75;
+  color: var(--color-muted);
+}
+.dream__text:first-of-type {
+  margin-top: var(--space-lg);
+}
+
+/* Polaroid frame (shared by both layouts) */
+.polaroid {
+  padding: 12px;
+  background: #fff;
+  border-radius: 2px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.18);
+}
+.polaroid__photo {
+  display: block;
+  aspect-ratio: 3 / 4;
+  background-color: #e7ded1;          /* warm placeholder until the photo is added */
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* --- Mobile / tablet: swipeable scroll-snap carousel under the text --- */
+.dream__photos {
+  display: flex;
+  gap: var(--space-md);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 var(--container-pad) var(--space-2xl);
+  scrollbar-width: none;              /* Firefox */
+}
+.dream__photos::-webkit-scrollbar {
+  display: none;                      /* Chrome / Safari */
+}
+.dream__photo {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+}
+.dream__photo .polaroid__photo {
+  width: 72vw;
+  max-width: 300px;
+}
+
+/* --- Phones: carousel sits between the heading and the body copy --- */
+@media (max-width: 900px) {
+  .dream__photos {
+    margin-top: var(--space-lg);          /* gap below the heading */
+    padding-bottom: var(--space-lg);      /* gap above the copy */
+  }
+  /* The carousel already provides the lead gap, so drop the copy's. */
+  .dream__inner--copy .dream__text:first-of-type {
+    margin-top: 0;
+  }
+}
+
+/* --- Tablet (901–1199px): the flanking desktop layout starts at 1200px, so
+   here preserve the original order — heading, copy, then the carousel below.
+   Photos are still in flow at this range, so reorder the halves with flexbox. */
+@media (min-width: 901px) and (max-width: 1199px) {
+  .dream {
+    display: flex;
+    flex-direction: column;
+  }
+  .dream__inner--head { order: 1; }
+  .dream__inner--copy { order: 2; }
+  .dream__photos      { order: 3; }
+}
+
+/* --- Desktop: photos flank the centered text --- */
+@media (min-width: 1200px) {
+  .dream__photos {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(100% - 2rem, 1280px);  /* centered band so photos flank the text */
+    display: block;
+    overflow: visible;
+    padding: 0;
+    pointer-events: none;
+  }
+  .dream__photo {
+    position: absolute;
+  }
+  .dream__photo .polaroid__photo {
+    width: 200px;
+  }
+  .dream__photo--1 { top: 50%; left: 0;   z-index: 1; transform: translateY(-62%) rotate(-7deg); }
+  .dream__photo--2 { top: 50%; left: 6%;  z-index: 2; transform: translateY(-6%)  rotate(4deg); }
+  .dream__photo--3 { top: 50%; right: 0;  z-index: 1; transform: translateY(-62%) rotate(7deg); }
+  .dream__photo--4 { top: 50%; right: 6%; z-index: 2; transform: translateY(-6%)  rotate(-4deg); }
+}
+
+/* ==========================================================================
+   PULL QUOTE  —  .quote  (dark band, large centered italic statement)
+   ========================================================================== */
+.quote {
+  position: relative;
+  overflow: hidden;
+  background: url("../img/home/home-frame-2.webp") center / cover no-repeat;
+  color: #f5f0e8;
+  padding-block: var(--space-2xl);
+}
+
+/* Each page's pull-quote band uses its own frame photo. */
+.about .quote {
+  background-image: url("../img/about-us/about-us-frame.webp");
+}
+.service-area .quote {
+  background-image: url("../img/service-area/service-area-frame.webp");
+}
+
+/* On mobile, every pull-quote band swaps to the portrait mobile frame.
+   (Listed for all three so it beats the per-page selectors' specificity.) */
+@media (max-width: 760px) {
+  .quote,
+  .about .quote,
+  .service-area .quote {
+    background-image: url("../img/mobile-frame.webp");
+  }
+}
+
+.quote__text {
+  position: relative;
+  z-index: 1;                         /* above the background image */
+  max-width: 1000px;
+  margin-inline: auto;
+  text-align: center;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.6rem, 1.1rem + 2.4vw, 3rem);
+  line-height: 1.28;
+  text-wrap: balance;
+}
+
+/* ==========================================================================
+   SPECS  —  .specs  (cream band: centered header + bordered spec cards)
+   Two columns of cards; each card pairs a serif title + description with an
+   image flush to the card edge. Rows align across columns (grid stretch), and
+   each image fills its card's height. Collapses to one column, then stacks
+   image-over-text on phones.
+   ========================================================================== */
+.specs {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+
+.specs__header {
+  text-align: center;
+  margin-bottom: var(--space-2xl);
+}
+.specs__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.9rem, 1.4rem + 2.2vw, 3rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+.specs__title em {
+  display: block;
+  font-style: italic;
+  font-weight: 500;
+}
+
+.specs__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-sm);
+}
+
+.spec {
+  display: grid;
+  grid-template-columns: 1.6fr 1fr;   /* text | image */
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;                   /* clip the flush image to the corners */
+}
+.spec__body {
+  padding: var(--space-md);
+}
+.spec__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.12rem;
+  line-height: 1.25;
+  color: var(--color-dark);
+}
+.spec__desc {
+  margin-top: var(--space-xs);
+  font-size: 0.84rem;
+  line-height: 1.55;
+  color: var(--color-muted);
+}
+.spec__media {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* One card per row on mid screens. */
+@media (max-width: 780px) {
+  .specs__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Stack image over text on phones. */
+@media (max-width: 480px) {
+  .spec {
+    grid-template-columns: 1fr;
+  }
+  .spec__media {
+    order: -1;
+    min-height: 170px;
+  }
+}
+
+/* ==========================================================================
+   SIZES  —  .sizes  (full-bleed photo: header row + three pricing cards)
+   Header is split (headline left, intro + button right); the pricing cards
+   sit over the lower half of the photo. Drop a photo at img/sizes-bg.jpg.
+   ========================================================================== */
+.sizes {
+  position: relative;
+  color: #fff;
+  background: var(--color-dark) url("../img/home/home-frame-3.webp") center / cover no-repeat;
+}
+.sizes::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(20, 15, 10, 0.6) 0%,
+    rgba(20, 15, 10, 0.28) 30%,
+    rgba(20, 15, 10, 0.16) 60%,
+    rgba(20, 15, 10, 0.22) 100%
+  );
+  pointer-events: none;
+}
+
+.sizes__inner {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-2xl);
+}
+
+/* --- Header row --- */
+.sizes__header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+  margin-bottom: var(--space-2xl);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.3);
+}
+.sizes__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.25rem, 1.6rem + 3vw, 4rem);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.sizes__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.sizes__intro {
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+  padding-top: var(--space-md);
+}
+.sizes__intro p {
+  max-width: 48ch;
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.92);
+}
+.sizes__intro .btn {
+  margin-top: var(--space-lg);
+}
+
+/* --- Pricing cards --- */
+.sizes__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+.plan {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-cream);
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.22);
+}
+.plan__media {
+  aspect-ratio: 5 / 2;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.plan__body {
+  flex: 1;
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  color: var(--color-text);
+}
+.plan__title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.5rem;
+  color: var(--color-gold);
+  margin-bottom: var(--space-md);
+}
+.plan__spec {
+  font-size: 0.95rem;
+  line-height: 1.75;
+}
+.plan__spec strong {
+  font-weight: 700;
+}
+.plan__desc {
+  margin-top: var(--space-md);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+/* --- Sizes: responsive --- */
+@media (max-width: 900px) {
+  .sizes__grid {
+    grid-template-columns: 1fr;
+    max-width: 460px;
+  }
+  /* Cards are full-width now, so give the photo a taller crop that shows the
+     whole coop (the wide 5:2 desktop crop reads as a thin strip on mobile). */
+  .plan__media {
+    aspect-ratio: 3 / 2;
+  }
+}
+@media (max-width: 760px) {
+  .sizes__header {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  /* Full-width CTA under the stacked header. */
+  .sizes__intro .btn {
+    width: 100%;
+  }
+}
+
+/* ==========================================================================
+   DELIVERY  —  .delivery  (reusable dark split-band: headline left, body +
+   hairline right, with optional paragraphs and/or a button). Used by the home
+   "delivery" section and the our-models "Custom Builds" section.
+   ========================================================================== */
+.delivery {
+  background: var(--color-dark);
+  color: #f5f0e8;
+  padding-block: var(--space-2xl);
+}
+.delivery__inner {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+.delivery__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.4vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+}
+.delivery__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.delivery__body {
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  padding-top: var(--space-md);
+}
+.delivery__body p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.72);
+}
+.delivery__body p + p {
+  margin-top: var(--space-md);
+}
+.delivery__body .btn {
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 820px) {
+  .delivery__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+/* ==========================================================================
+   CTA  —  .cta  (reusable cream closing band: centered headline + two buttons,
+   with optional sub / statement / body copy). Used by the home page and the
+   how-we-build page.
+   ========================================================================== */
+.cta {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+  text-align: center;
+}
+.cta__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.4vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+.cta__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.cta__sub {
+  margin-top: var(--space-sm);
+  font-size: var(--fs-md);
+  color: var(--color-muted);
+}
+.cta__statement {
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1rem, 0.95rem + 0.4vw, 1.2rem);
+  color: var(--color-text);
+}
+.cta__text {
+  margin-top: var(--space-lg);
+  margin-inline: auto;
+  max-width: 72ch;
+  font-size: var(--fs-md);
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-xl);
+}
+
+/* Stack the closing CTAs full-width on phones (matches the hero buttons). */
+@media (max-width: 600px) {
+  .cta__actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* ==========================================================================
+   PAGE HERO  —  .page-hero  (reusable subpage hero: photo + left-aligned copy
+   with an optional bottom credentials bar). Drop a photo at the bg url below.
+   ========================================================================== */
+.page-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(440px, 68vh, 640px);
+  color: #fff;
+  background-color: var(--color-dark);   /* fallback; each page sets its own bg image inline */
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(95deg,
+    rgba(20, 15, 10, 0.74) 0%,
+    rgba(20, 15, 10, 0.42) 48%,
+    rgba(20, 15, 10, 0.12) 100%);
+}
+.page-hero__inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-block: var(--space-2xl);
+}
+.page-hero__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2.4rem, 1.4rem + 3.6vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+.page-hero__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+/* Drop the italic phrase onto its own line (headline reads as two stacked
+   lines rather than one flowing line). */
+.page-hero__title--stack em {
+  display: block;
+}
+.page-hero__lead {
+  margin-top: var(--space-md);
+  font-size: clamp(1rem, 0.95rem + 0.3vw, 1.15rem);
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Mobile: center the subpage hero copy (eyebrow, headline, lead), matching the
+   home hero. Desktop keeps the left-aligned layout. */
+@media (max-width: 760px) {
+  .page-hero__inner {
+    text-align: center;
+  }
+  .page-hero__lead {
+    max-width: 42ch;
+    margin-inline: auto;
+  }
+}
+
+/* Bottom credentials bar (checkmarks) */
+.hero-bar {
+  position: relative;
+  z-index: 1;
+  background: rgba(20, 15, 10, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.hero-bar__inner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  list-style: none;
+}
+.hero-bar__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.9);
+}
+.hero-bar__item:first-child {
+  padding-left: 0;
+}
+.hero-bar__item:last-child {
+  padding-right: 0;
+}
+.hero-bar__item + .hero-bar__item {
+  border-left: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+/* Gold check icon (shared) */
+.icon-check {
+  width: 16px;
+  height: 16px;
+  color: var(--color-gold);
+  flex-shrink: 0;
+}
+
+@media (max-width: 760px) {
+  /* Solid brown band (no photo showing through) on mobile. */
+  .hero-bar {
+    background: var(--color-dark);
+  }
+  .hero-bar__inner {
+    grid-template-columns: 1fr;        /* one credential per row */
+    gap: var(--space-md);              /* single source of row spacing */
+    padding-block: var(--space-lg);    /* band breathing room (items now unpadded) */
+  }
+  .hero-bar__item,
+  .hero-bar__item:first-child,
+  .hero-bar__item:last-child {
+    padding: 0;                        /* avoid double-counting with the gap */
+    gap: var(--space-md);              /* more room between check and label */
+    font-size: 0.95rem;               /* larger label */
+  }
+  .hero-bar__item + .hero-bar__item {
+    border-left: 0;
+  }
+  /* Larger gold check on mobile (base 16px stays for desktop / model cards). */
+  .hero-bar .icon-check {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+/* Region filter bar (gallery hero foot). Same dark strip as the credentials
+   bar; a label plus filter buttons that the gallery grid will hook into. */
+.filter-bar {
+  position: relative;
+  z-index: 1;
+  background: rgba(20, 15, 10, 0.5);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.filter-bar :focus-visible {
+  outline-color: var(--color-gold-light);
+}
+.filter-bar__inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+.filter-bar__label {
+  flex-shrink: 0;
+  padding-right: var(--space-lg);
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  white-space: nowrap;
+}
+.filter-bar__options {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+.filter-bar__btn {
+  padding-block: var(--space-sm);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: rgba(255, 255, 255, 0.7);
+  transition: color var(--transition);
+}
+.filter-bar__btn:hover,
+.filter-bar__btn:focus-visible {
+  color: #fff;
+}
+.filter-bar__btn.is-active {
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .filter-bar__inner {
+    overflow-x: auto;
+    gap: var(--space-md);
+    scrollbar-width: none;
+  }
+  .filter-bar__inner::-webkit-scrollbar {
+    display: none;
+  }
+  .filter-bar__options {
+    flex: 0 0 auto;
+    justify-content: flex-start;
+    gap: var(--space-lg);
+  }
+}
+
+/* ==========================================================================
+   GALLERY GRID  —  .gallery  (filterable editorial masonry of installations)
+   A 6-column grid: most cards span 2 (3-up rows); every 4th & 5th visible card
+   spans 3 (2-up rows), giving the alternating layout. The span assignment is
+   (re)computed in main.js so the grid stays tiled as regions are filtered.
+   ========================================================================== */
+.gallery {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.gallery__grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-md);
+  max-width: 1600px;
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  grid-auto-flow: row dense;
+}
+.gallery__item {
+  grid-column: span 2;                /* default: 3-up (also the no-JS layout) */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+}
+.gallery__item--wide {
+  grid-column: span 3;                /* 2-up */
+}
+.gallery__item[hidden] {
+  display: none;
+}
+.gallery__media {
+  aspect-ratio: 3 / 2;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.gallery__caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+}
+.gallery__loc {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+.gallery__model {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+/* Pagination + result count */
+.gallery__footer {
+  margin-top: var(--space-xl);
+  text-align: center;
+}
+.pagination {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding-inline: 0.5rem;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color var(--transition), color var(--transition);
+}
+.pagination__btn:hover:not(:disabled):not(.is-active) {
+  border-color: var(--color-dark);
+}
+.pagination__btn.is-active {
+  border-color: var(--color-dark);
+  font-weight: 600;
+}
+.pagination__btn:disabled {
+  color: #c9c4bb;
+  cursor: default;
+}
+.gallery__count {
+  margin-top: var(--space-sm);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+@media (max-width: 900px) {
+  .gallery__grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-sm);
+  }
+  .gallery__item,
+  .gallery__item--wide {
+    grid-column: auto;
+  }
+}
+@media (max-width: 560px) {
+  .gallery__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================================================
+   STANDARD  —  .standard  (about: cream split, headline left / story right
+   with a gold-accented statement line in the body)
+   ========================================================================== */
+.standard {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.standard__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+.standard__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.standard__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.standard__text {
+  max-width: 52ch;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.standard__text + .standard__text {
+  margin-top: var(--space-md);
+}
+.standard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+/* Reusable gold-accented serif statement line, set within body copy. */
+.accent-statement {
+  margin-block: var(--space-lg);
+  padding-left: var(--space-md);
+  border-left: 2px solid rgba(197, 160, 106, 0.6);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.05rem + 0.5vw, 1.5rem);
+  color: var(--color-text);
+}
+
+@media (max-width: 820px) {
+  .standard__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+/* ==========================================================================
+   SERVE  —  .serve  (about: cream split, story + accent line left / photo right)
+   ========================================================================== */
+.serve {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.serve__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: stretch;
+}
+.serve__title {
+  margin-bottom: var(--space-lg);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.serve__title em {
+  display: block;
+  font-style: italic;
+  font-weight: 500;
+}
+.serve__text {
+  max-width: 52ch;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.serve__media {
+  align-self: stretch;
+  min-height: 360px;
+  border-radius: 4px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 820px) {
+  .serve__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  .serve__media {
+    order: -1;
+    min-height: 280px;
+  }
+}
+
+/* ==========================================================================
+   FAQ LIST  —  .faq  (gold-accented questions + answers, rooster watermark)
+   ========================================================================== */
+.faq {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-cream) url("../img/faq/faq-frame.webp") center / cover no-repeat;
+  padding-block: var(--space-2xl);
+}
+.faq__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+.faq__item + .faq__item {
+  margin-top: var(--space-lg);
+}
+/* <summary> as the toggle — strip the native marker, add the gold accent. */
+.faq__trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-xs);
+  padding-left: var(--space-md);
+  border-left: 2px solid var(--color-gold);
+  list-style: none;
+  cursor: pointer;
+}
+.faq__trigger::-webkit-details-marker {
+  display: none;
+}
+.faq__q {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.15rem, 1.05rem + 0.4vw, 1.4rem);
+  line-height: 1.3;
+  color: var(--color-text);
+}
+.faq__chevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  color: var(--color-muted);
+  transition: transform var(--transition), color var(--transition);
+}
+.faq__trigger:hover .faq__chevron {
+  color: var(--color-gold);
+}
+.faq__item[open] .faq__chevron {
+  transform: rotate(180deg);
+}
+.faq__panel {
+  overflow: hidden;
+  transition: height 0.3s ease;     /* height is driven by main.js for the animation */
+}
+.faq__a {
+  padding-top: var(--space-sm);
+  padding-left: var(--space-md);
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.faq__watermark {
+  position: absolute;
+  top: 50%;
+  right: -40px;
+  width: clamp(320px, 34vw, 540px);
+  aspect-ratio: 90 / 102;
+  transform: translateY(-50%);
+  background: url("../img/rooster.svg") center / contain no-repeat;
+  opacity: 0.06;
+  pointer-events: none;
+}
+
+@media (max-width: 600px) {
+  .faq__watermark {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   REGIONS  —  .region  (service-area: alternating image/text bands per region,
+   with alternating background tints; reuses .accent-statement + outline button)
+   ========================================================================== */
+.region {
+  padding-block: var(--space-2xl);
+}
+.region:nth-child(odd) {
+  background: #f1ebe0;                 /* warm tint */
+}
+.region:nth-child(even) {
+  background: #f6f5f2;                 /* lighter tint */
+}
+.region__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: stretch;
+}
+.region:nth-child(even) .region__media {
+  order: -1;                          /* photo to the left on alternating bands */
+}
+.region__body .eyebrow {
+  margin-bottom: var(--space-xs);
+}
+.region__title {
+  margin-bottom: var(--space-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 1.4rem + 1.8vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.region__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.region__text {
+  max-width: 52ch;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.region__text + .region__text {
+  margin-top: var(--space-md);
+}
+.region__media {
+  align-self: stretch;
+  min-height: 360px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 860px) {
+  .region__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  .region__media {
+    order: -1;                        /* photo on top when stacked */
+    min-height: 280px;
+  }
+}
+
+/* Short button label is hidden by default; swapped in for the full label on
+   mobile (used by the service-area "Request a <Region> Quote" CTAs). */
+.btn-label-short {
+  display: none;
+}
+
+/* Service area: full-width, centered CTAs on mobile, with shortened labels. */
+@media (max-width: 760px) {
+  .service-area .btn {
+    width: 100%;                      /* wider; text stays centered via .btn */
+  }
+  .service-area .standard__actions,
+  .service-area .cta__actions {
+    flex-direction: column;           /* stack the paired buttons full-width */
+  }
+  .btn-label-full {
+    display: none;
+  }
+  .btn-label-short {
+    display: inline;
+  }
+}
+
+/* ==========================================================================
+   CONTACT  —  .contact  (request-a-quote: intro + form, cream + watermark)
+   ========================================================================== */
+.contact {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-cream) url("../img/contact/contact-frame.webp") center / cover no-repeat;
+  padding-block: var(--space-2xl);
+}
+.contact__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+.contact__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.contact__title em {
+  display: block;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* --- Form --- */
+.contact__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+}
+.field label {
+  margin-bottom: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+.field .req {
+  color: var(--color-gold);
+}
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--color-text);
+}
+.field input,
+.field select {
+  padding: 0.7rem 0.85rem;
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+}
+.field textarea {
+  padding: 0.5rem 0;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  resize: vertical;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #a8a29a;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--color-gold);
+}
+/* Custom gold dropdown chevron + greyed placeholder option */
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c5a06a' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+}
+.field select:has(option[value=""]:checked) {
+  color: #a8a29a;
+}
+.contact__submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: var(--space-xs);
+}
+.contact__note {
+  margin-top: var(--space-sm);
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+/* --- Success state --- */
+.contact__success {
+  padding: var(--space-lg);
+  background: #fff;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+.contact__success h3 {
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.5rem;
+  color: var(--color-text);
+}
+.contact__success p {
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+.contact__watermark {
+  position: absolute;
+  bottom: -50px;
+  left: -50px;
+  width: clamp(360px, 38vw, 600px);
+  aspect-ratio: 90 / 102;
+  background: url("../img/rooster.svg") center / contain no-repeat;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+@media (max-width: 820px) {
+  .contact__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-xl);
+  }
+  .contact__watermark {
+    display: none;
+  }
+  /* Let the italic flow inline so the heading reads as natural running text
+     ("Tell us about your / yard and your flock") rather than dropping the
+     italic phrase onto its own line. */
+  .contact__title em {
+    display: inline;
+  }
+}
+/* Name|Email and Phone|City stay paired two-up on mobile (no stacking). */
+
+/* ==========================================================================
+   MODELS  —  .model  (our-models page: alternating image / detail rows)
+   Each row is a 50/50 grid with the photo flush to the outer edge; even rows
+   flip the photo to the opposite side. Stacks photo-over-detail on mobile.
+   ========================================================================== */
+.models {
+  background: var(--color-cream);
+}
+.model {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}
+.model:nth-child(even) .model__media {
+  order: 2;                           /* photo to the right on alternating rows */
+}
+.model__media {
+  min-height: 360px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.model__body {
+  padding: var(--space-2xl) clamp(1.5rem, 4vw, 4.5rem);
+}
+.model__body .eyebrow {
+  margin-bottom: var(--space-xs);
+}
+.model__dim {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  line-height: 1.1;
+  color: var(--color-text);
+}
+.model__sub {
+  margin-top: var(--space-sm);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.05rem;
+  color: var(--color-dark);
+}
+.model__desc {
+  margin-top: var(--space-md);
+  max-width: 52ch;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+.model__rule {
+  border: 0;
+  border-top: 1px solid var(--color-border);
+  margin-block: var(--space-lg);
+}
+.model__price {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 1.4rem + 1.6vw, 2.5rem);
+  color: var(--color-text);
+}
+.model__includes {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: var(--space-sm);
+  max-width: 50ch;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+.model__includes .icon-check {
+  margin-top: 3px;
+}
+.model__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+@media (max-width: 860px) {
+  .model {
+    grid-template-columns: 1fr;
+  }
+  .model:nth-child(even) .model__media {
+    order: 0;                         /* photo back on top when stacked */
+  }
+  .model__media {
+    min-height: 260px;
+  }
+  .model__body {
+    padding: var(--space-xl) var(--container-pad);
+  }
+  /* Full-width stacked CTAs on the stacked card (matches the hero/CTA pattern). */
+  .model__actions .btn {
+    flex: 1 1 100%;
+  }
+}
+
+/* ==========================================================================
+   INSTALL  —  .install  (cream split: headline left, stacked step list right)
+   ========================================================================== */
+.install {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.install__inner {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+.install__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.4vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+.install__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+
+.install__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  list-style: none;
+}
+.install__item-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem);
+  line-height: 1.2;
+  color: var(--color-dark);
+}
+.install__item-text {
+  margin-top: var(--space-xs);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--color-muted);
+}
+
+@media (max-width: 820px) {
+  .install__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+}
+
+/* ==========================================================================
+   PHILOSOPHY  —  .philosophy  (two columns: intro w/ accent rule + 3 points)
+   ========================================================================== */
+.philosophy {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.philosophy__inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: start;
+}
+.philosophy__title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2vw, 3rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.philosophy__title em {
+  display: block;
+  font-style: italic;
+  font-weight: 500;
+}
+.philosophy__lead {
+  margin-top: var(--space-lg);
+  padding-left: var(--space-md);
+  border-left: 2px solid rgba(197, 160, 106, 0.5);
+}
+.philosophy__lead p {
+  max-width: 52ch;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: #44413c;
+}
+.philosophy__lead p + p {
+  margin-top: var(--space-md);
+}
+
+.philosophy__points {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+.philosophy__point-title {
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.05rem + 0.6vw, 1.45rem);
+  line-height: 1.2;
+  color: var(--color-text);
+}
+.philosophy__point-text {
+  max-width: 54ch;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+@media (max-width: 860px) {
+  .philosophy__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-2xl);
+  }
+}
+
+/* ==========================================================================
+   MATERIALS  —  .materials  (how-we-build: checkerboard of white text panels
+   and photos). Reuses .specs__header for the centered heading; each row's
+   white panel alternates sides. Stacks photo-over-text on phones.
+   ========================================================================== */
+.materials {
+  background: var(--color-cream);
+  padding-block: var(--space-2xl);
+}
+.materials__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  max-width: 1400px;
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+.material {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-xs);
+  align-items: stretch;
+}
+.material:nth-child(even) .material__media {
+  order: -1;                          /* photo to the left on alternating rows */
+}
+.material__body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: #fff;
+  padding: clamp(1.5rem, 3vw, 2.75rem);
+}
+.material__title {
+  margin-bottom: var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 1.05rem + 0.7vw, 1.5rem);
+  line-height: 1.25;
+  color: var(--color-dark);
+}
+.material__text {
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--color-muted);
+}
+/* The photo's min-height sets a uniform floor; the white text panel stretches
+   to match it (align-items: stretch), so every row lands the same height. */
+.material__media {
+  min-height: 340px;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+@media (max-width: 760px) {
+  .material {
+    grid-template-columns: 1fr;
+  }
+  .material__media {
+    order: -1;                        /* photo on top when stacked */
+    min-height: 220px;
+  }
+}
+
+/* ==========================================================================
+   COVERAGE  —  .coverage  (service-area-2: two-up split — bordered city list
+   left, hand-drawn Florida pin map right. Reuses .eyebrow + display headings.)
+   ========================================================================== */
+.coverage {
+  padding-block: var(--space-2xl);
+}
+.coverage__inner {
+  max-width: 1500px;                  /* wider than the default container so the
+                                         section spreads horizontally, not down */
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: clamp(2rem, 6vw, 5rem);
+  align-items: center;
+}
+.coverage__body .eyebrow {
+  margin-bottom: var(--space-xs);
+}
+.coverage__title {
+  margin-bottom: var(--space-md);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.25rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.coverage__title em {
+  font-style: italic;
+  font-weight: 500;
+}
+.coverage__lead {
+  max-width: 52ch;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+/* Two-column bordered city list with gold chevron markers. The list fills
+   column-first (6 rows) so the cities read top-to-bottom down each column,
+   matching the source order; on mobile it collapses to a single column in
+   that same order. */
+.coverage__cities {
+  margin-top: var(--space-lg);
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(6, auto);
+  grid-auto-flow: column;
+  column-gap: var(--space-lg);
+}
+.coverage__city {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--color-text);
+}
+/* Cap the top of each column (item 1 = top of col 1, item 7 = top of col 2). */
+.coverage__city:nth-child(1),
+.coverage__city:nth-child(7) {
+  border-top: 1px solid var(--color-border);
+}
+.coverage__city::before {
+  content: "\203A";                   /* › gold chevron */
+  color: var(--color-gold);
+  font-weight: 400;
+}
+
+.coverage__notes {
+  margin-top: var(--space-lg);
+}
+.coverage__note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+.coverage__note + .coverage__note {
+  margin-top: var(--space-xs);
+}
+.coverage__ico {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-gold);
+}
+.coverage__fine {
+  margin-top: var(--space-md);
+  max-width: 60ch;
+  font-size: 0.82rem;
+  line-height: 1.65;
+  color: var(--color-muted);
+}
+
+/* Florida coverage map image. */
+.coverage__map {
+  display: flex;
+  justify-content: center;
+}
+.coverage__map-img {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+}
+
+@media (max-width: 860px) {
+  .coverage__inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+  /* Map sits below the city list / copy when stacked. */
+}
+@media (max-width: 760px) {
+  /* Single column of separate white cards, each tagged with a gold bar. */
+  .coverage__cities {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    grid-auto-flow: row;             /* single column, in source order */
+    row-gap: 0.5rem;
+  }
+  .coverage__city {
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    padding: 0.95rem 1.1rem;
+    gap: 0.8rem;
+  }
+  /* Gold vertical tick instead of the desktop chevron. */
+  .coverage__city::before {
+    content: "";
+    width: 3px;
+    height: 0.95em;
+    border-radius: 2px;
+    background: var(--color-gold);
+    flex-shrink: 0;
+  }
+  /* Larger note icons to match the card design. */
+  .coverage__ico {
+    width: 26px;
+    height: 26px;
+    font-size: 1.3rem;
+  }
+  .coverage__note {
+    gap: 0.55rem;
+    font-size: 0.88rem;
+  }
+}

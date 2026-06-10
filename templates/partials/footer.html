@@ -1,0 +1,36 @@
+{# Shared site footer. Columns + contact details come from app.py. #}
+<footer class="site-footer">
+  <div class="footer-inner container">
+    <div class="footer-brand">
+      <a class="brand brand--footer" href="{{ url_for('index') }}" aria-label="Florida Chicken Coops — home">
+        <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="290" height="120" />
+      </a>
+      <p class="footer-tagline">Built to outlast the flock.</p>
+      <p class="footer-blurb">
+        Florida statewide. Free delivery within Broward, Miami-Dade, and
+        Homestead. Statewide delivery available at $2/mile.
+      </p>
+    </div>
+
+    {% for col in footer_columns %}
+    <div class="footer-col">
+      <h2 class="footer-heading">{{ col.heading }}</h2>
+      <ul>
+        {% for link in col.links %}
+        <li>
+          <a href="{{ link.url }}">{{ link.label }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="footer-bottom container">
+    <p class="footer-copy">&copy; {{ current_year }} Florida Chicken Coops. All Rights Reserved.</p>
+    <p class="footer-contact">
+      <a href="mailto:{{ contact.email }}" aria-label="Email us">{{ contact.email }}</a>
+      <a href="{{ contact.phone_href }}" aria-label="Call us">{{ contact.phone }}</a>
+    </p>
+  </div>
+</footer>

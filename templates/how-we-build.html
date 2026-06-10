@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}How We Build | Florida Chicken Coops{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/how-we-build/hwb-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">How We Build</p>
+    <h1 class="page-hero__title">
+      Built like a structure, <em>not furniture.</em>
+    </h1>
+    <p class="page-hero__lead">
+      Most chicken coops are built like backyard kits. Ours are built like small
+      outdoor structures — the same materials, the same fasteners, the same
+      construction principles used by professionals who build things that have to
+      survive in Florida for decades.
+    </p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="philosophy">
+  <div class="philosophy__inner container">
+    <div class="philosophy__intro">
+      <p class="eyebrow">Our Open-Design Philosophy</p>
+      <h2 class="philosophy__title">Built for Florida. <em>Built to breathe.</em></h2>
+      <div class="philosophy__lead">
+        <p>
+          Florida has the climate the rest of the country doesn't fully
+          understand. Sustained 90° heat for six months a year. Coastal humidity
+          that doesn't quit. Termites that find anything untreated.
+          Hurricane-force winds that test every fastener you didn't tighten.
+        </p>
+        <p>
+          A chicken coop designed in Pennsylvania or the Carolinas isn't designed
+          for any of that. Ours is designed for nothing else.
+        </p>
+      </div>
+    </div>
+
+    {% set points = [
+      {"title": "Superior ventilation, by design", "text": "Our fully open interior eliminates the dead zones where heat and moisture build — the leading causes of respiratory illness and heat stress in backyard flocks. Air moves through the coop from every direction, all day, every day."},
+      {"title": "Effortless maintenance", "text": "No enclosed boxes to scrub. No cramped floors that trap waste. Droppings fall naturally onto your ground substrate, and routine maintenance becomes a five-minute task instead of an hour-long chore."},
+      {"title": "A flock that actually thrives", "text": "Closed coops trap ammonia, moisture, and bacteria. Open coops don't. The science isn't complicated — but most coop builders ignore it because closed designs photograph better in catalog shots."}
+    ] %}
+    <div class="philosophy__points">
+      {% for pt in points %}
+      <div class="philosophy__point">
+        <h3 class="philosophy__point-title">{{ pt.title }}</h3>
+        <p class="philosophy__point-text">{{ pt.text }}</p>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="materials">
+  <div class="container">
+    <header class="specs__header">
+      <p class="eyebrow">Overbuilt by Design.</p>
+      <h2 class="specs__title">
+        Commercial-grade materials.
+        <em>Storm-conscious construction.</em>
+      </h2>
+    </header>
+  </div>
+
+  {% set materials = [
+    {"img": "spec-01.jpg", "title": "Foundation lumber — UC4A/UC4B pressure-treated", "text": "The highest ground-contact rating available for high-moisture environments. The structural base of every coop is built from lumber engineered specifically to survive direct exposure to wet Florida soil for decades. Standard pressure-treated lumber isn't rated for this — ours is."},
+    {"img": "spec-02.jpg", "title": "Cedar and cypress board and trim", "text": "Naturally resistant to rot, moisture, and insects — the only wood species that belong on an outdoor structure built to last through Florida humidity. We don't paint over inferior lumber and call it premium. The wood itself has to perform."},
+    {"img": "spec-03.jpg", "title": "Elevated rot-resistant base", "text": "Every coop sits on heavy 4×4 runners, lifted off the ground. Moisture can't wick up into the frame. The structure stays dry, the build stays sound, and the lifespan multiplies. Ground contact is the primary point of failure on most outdoor structures in Florida — we eliminate it."},
+    {"img": "spec-04.jpg", "title": "Simpson Strong-Tie hurricane connectors", "text": "Galvanized engineered roof-to-wall connectors that meet hurricane-rated structural standards. The roof stays where it belongs when Florida weather gets serious. Every rafter is tied — not just nailed — to the wall below it, the same way residential roofs are built in high-wind zones."},
+    {"img": "spec-05.jpg", "title": "Insulated Metal Roofing", "text": "Reflects radiant heat. Withstands wind. Outlasts every shingle or wood roof on the market in a Florida climate. The insulation layer reduces heat transfer into the coop — a meaningful difference for flock health during the summer months when ambient temperatures stay above 90° for weeks at a time."},
+    {"img": "spec-06.jpg", "title": "Galvanized-after-welding (GAW) 16-gauge hardware cloth", "text": "Standard galvanized wire leaves raw, unprotected metal at every weld point — the first place corrosion starts. GAW hardware cloth is dip-coated as a finished product, sealing every joint, seam, and cut edge against Florida's wet, salty air. This is the difference between mesh that lasts six years and mesh that lasts twenty."},
+    {"img": "spec-07.jpg", "title": "Stainless steel and hot-dipped galvanized hardware", "text": "Every hinge, latch, and fastener is specified for coastal and high-humidity environments. Nothing on the structure will rust, seize, or fail. Standard hardware store hinges are not coastal-rated. In Florida, that distinction shows up within the first two years."},
+    {"img": "spec-08.jpg", "title": "Ground Anchoring System", "text": "Every coop is anchored to the ground as part of the installation — not simply set in place. It's a structure, not a piece of furniture. The anchoring system is designed to resist uplift and lateral movement in high-wind events, including the kind of gusts that arrive without warning during Florida storm season."},
+    {"img": "spec-09.jpg", "title": "Copper naphthenate cut-end sealing", "text": "When lumber is cut, the exposed end becomes the most vulnerable point on the entire board — the place moisture, rot, and fungal decay begin. We seal every cut end with copper naphthenate preservative before it goes into the structure. It's a slower way to build. It's the only way to build something that lasts."},
+    {"img": "spec-10.jpg", "title": "Simpson Strong-Tie and GRK RSS structural screws", "text": "Engineered to the highest industry standards — corrosion-resistant coatings, self-countersinking heads, and exceptional shear and withdrawal strength. Standard screws strip, corrode, and fail. Ours don't. In a structure designed to survive twenty-plus years in Florida's climate, the fasteners have to match the ambition of the rest of the build."}
+  ] %}
+  <div class="materials__grid">
+    {% for m in materials %}
+    <article class="material">
+      <div class="material__body">
+        <h3 class="material__title">{{ m.title }}</h3>
+        <p class="material__text">{{ m.text }}</p>
+      </div>
+      <div class="material__media" role="img" aria-label="{{ m.title }}"
+           style="background-image: url('{{ url_for('static', filename='img/how-we-build/image-' ~ loop.index ~ '.webp') }}')"></div>
+    </article>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Why It Matters</p>
+    <h2 class="cta__title">A coop should outlast the <em>flock that lives in it.</em></h2>
+    <p class="cta__statement">
+      A backyard hen lives 6–10 years. A budget chicken coop, in Florida, lasts
+      about three.
+    </p>
+    <p class="cta__text">
+      When you buy a Florida Chicken Coop, you're buying a structure that will
+      house generations of flocks — not the first one and then a replacement
+      coop five years later. The materials cost more. The fasteners cost more.
+      The construction takes longer. The result is a backyard investment that
+      pays back every year you own it.
+    </p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+        Place a Deposit <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

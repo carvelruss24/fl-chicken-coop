@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Our Models | Florida Chicken Coops{% endblock %}
+
+{% macro check() -%}
+<svg class="icon-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+{%- endmacro %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/our-coops/our-coop-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Our Models</p>
+    <h1 class="page-hero__title page-hero__title--stack">
+      Three sizes. Built the same way.
+      <em>Built to last.</em>
+    </h1>
+    <p class="page-hero__lead">
+      Premium, over-engineered chicken coops — built in Florida, for Florida.
+      Designed to last decades, not seasons.
+    </p>
+  </div>
+
+  {% include 'partials/credentials-bar.html' %}
+</section>
+
+<section class="models">
+  {% set models = [
+    {
+      "badge": "The Small", "img": "model-small.jpg", "dim": "8 × 6",
+      "sub": "Eight feet by six feet · Up to 6 hens",
+      "desc": "The most popular choice for Florida families starting their first flock. Compact enough for most urban and suburban backyards. Engineered identically to our larger builds — no shortcuts on materials, no compromises on durability.",
+      "price": "$5,900",
+      "includes": "Includes delivery, installation, and ground anchoring within Broward, Miami-Dade, and Homestead."
+    },
+    {
+      "badge": "Most Popular", "img": "model-medium.jpg", "dim": "12 × 6",
+      "sub": "Twelve feet by six feet · 6–10 hens",
+      "desc": "The sweet spot for families who want a productive flock with room to grow. Generous interior square footage, the same over-engineered construction, the same lifetime durability.",
+      "price": "$6,499",
+      "includes": "Includes delivery, installation, and ground anchoring within Broward, Miami-Dade, and Homestead."
+    },
+    {
+      "badge": "The Large", "img": "model-large.jpg", "dim": "16 × 6",
+      "sub": "Sixteen feet by six feet · 10–15 hens",
+      "desc": "A full-scale backyard build for serious homesteaders, larger families, or anyone planning to share eggs with the neighborhood. Same materials, same engineering — scaled up.",
+      "price": "$6,900",
+      "includes": "Includes delivery, installation, and ground anchoring within Broward, Miami-Dade, and Homestead."
+    }
+  ] %}
+
+  {% for m in models %}
+  <article class="model">
+    <div class="model__media" role="img" aria-label="{{ m.badge }} coop"
+         style="background-image: url('{{ url_for('static', filename='img/our-coops/image-' ~ loop.index ~ '.webp') }}')"></div>
+    <div class="model__body">
+      <p class="eyebrow">{{ m.badge }}</p>
+      <h2 class="model__dim">{{ m.dim }}</h2>
+      <p class="model__sub">{{ m.sub }}</p>
+      <p class="model__desc">{{ m.desc }}</p>
+      <hr class="model__rule" />
+      <p class="model__price">{{ m.price }}</p>
+      <p class="model__includes">{{ check() }}<span>{{ m.includes }}</span></p>
+      <div class="model__actions">
+        <a class="btn btn--dark" href="{{ contact.cta.url }}">Place a Deposit</a>
+        <a class="btn btn--outline-dark" href="{{ contact.cta.url }}">
+          Request More Info <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </article>
+  {% endfor %}
+</section>
+
+{# Reuses the shared dark split-band component (.delivery) from the home page. #}
+<section class="delivery">
+  <div class="delivery__inner container">
+    <div class="delivery__head">
+      <p class="eyebrow">Need a different layout, size, or configuration?</p>
+      <h2 class="delivery__title">Custom <em>Builds</em></h2>
+    </div>
+    <div class="delivery__body">
+      <p>
+        If you need something larger, narrower, taller, or designed around an
+        existing feature in your yard — we'll build it. Same materials, same
+        engineering standard, same Florida-tested construction. Tell us what you
+        have in mind.
+      </p>
+      <a class="btn btn--outline" href="{{ contact.cta.url }}">
+        Request a Custom Quote <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="install">
+  <div class="install__inner container">
+    <div class="install__head">
+      <p class="eyebrow">Delivered Turnkey, Anywhere in Florida</p>
+      <h2 class="install__title">Delivery <em>&amp; Installation</em></h2>
+    </div>
+
+    {% set steps = [
+      {"title": "Free delivery and installation", "text": "Within Broward, Miami-Dade, and Homestead."},
+      {"title": "$2 per mile beyond our service area", "text": "Anywhere in Florida."},
+      {"title": "Every coop arrives fully built", "text": "We place it, anchor it, and walk you through it."}
+    ] %}
+    <ul class="install__list">
+      {% for step in steps %}
+      <li class="install__item">
+        <h3 class="install__item-title">{{ step.title }}</h3>
+        <p class="install__item-text">{{ step.text }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endblock %}
