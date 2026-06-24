@@ -2091,6 +2091,39 @@ main {
   font-weight: 500;
 }
 
+/* --- WhatsApp click-to-chat --- */
+.contact__or {
+  margin-top: var(--space-md);
+  max-width: 32ch;
+  color: var(--color-text);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.contact__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: var(--space-sm);
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  background: #25d366; /* WhatsApp brand green */
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: background var(--transition), transform var(--transition),
+    box-shadow var(--transition);
+}
+.contact__whatsapp:hover,
+.contact__whatsapp:focus-visible {
+  background: #1da851;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.35);
+}
+.contact__whatsapp-icon {
+  flex-shrink: 0;
+}
+
 /* --- Form --- */
 .contact__form {
   display: flex;
@@ -2219,7 +2252,7 @@ main {
     display: inline;
   }
 }
-/* Name|Email and Phone|City stay paired two-up on mobile (no stacking). */
+/* Name|Email and Phone|Zip stay paired two-up on mobile (no stacking). */
 
 /* ==========================================================================
    MODELS  —  .model  (our-models page: alternating image / detail rows)
