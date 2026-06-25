@@ -45,6 +45,13 @@
         </p>
       </div>
       {% else %}
+      {% if error %}
+      <div class="contact__error" role="alert">
+        <p>Sorry — we couldn't send your request just now. Please check the
+        required fields and try again, or reach us directly at
+        <a href="mailto:{{ contact.email }}">{{ contact.email }}</a>.</p>
+      </div>
+      {% endif %}
       <form class="contact__form" method="post" action="{{ url_for('contact') }}">
         <div class="form-row">
           <div class="field">

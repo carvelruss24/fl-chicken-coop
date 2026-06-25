@@ -2206,6 +2206,22 @@ main {
   color: var(--color-muted);
 }
 
+/* --- Error state --- */
+.contact__error {
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: #fcebea;
+  border: 1px solid #e0b4b0;
+  border-radius: 6px;
+  color: #8a1f15;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.contact__error a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 /* --- Success state --- */
 .contact__success {
   padding: var(--space-lg);
