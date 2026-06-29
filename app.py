@@ -19,7 +19,7 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 
 # Load SMTP / recipient settings from a local .env file (never committed).
@@ -282,11 +282,11 @@ def service_area_4():
 def contact():
     """Render the quote-request form and email each submission to the business."""
     if request.method != "POST":
-        return render_template("contact.html", submitted=False)
+        return render_template("contact.html")
 
     # 1. reCAPTCHA (currently disabled — verify_recaptcha returns True).
     if not verify_recaptcha(request.form.get("g-recaptcha-response", "")):
-        return render_template("contact.html", submitted=False, error=True)
+        return render_template("contact.html", error=True)
 
     # 2. Collect and lightly validate the required fields.
     name = request.form.get("name", "").strip()
@@ -298,14 +298,21 @@ def contact():
 
     if not all([name, email, phone, zip_code]):
         logger.warning("Contact form submitted with missing required fields.")
-        return render_template("contact.html", submitted=False, error=True)
+        return render_template("contact.html", error=True)
 
     # 3. Send the notification email. On failure, keep the form and warn.
     if not send_contact_email(name, email, phone, zip_code, size, notes):
-        return render_template("contact.html", submitted=False, error=True)
+        return render_template("contact.html", error=True)
 
-    # 4. Success — show the inline thank-you state.
-    return render_template("contact.html", submitted=True)
+    # 4. Success — redirect to the dedicated thank-you page. Using Post/Redirect/
+    #    Get means a browser refresh lands on /thank-you instead of re-submitting.
+    return redirect(url_for("thank_you"))
+
+
+@app.route("/thank-you")
+def thank_you():
+    """Confirmation page shown after a successful quote-request submission."""
+    return render_template("thank-you.html")
 
 
 if __name__ == "__main__":

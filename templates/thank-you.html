@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Thank You | Florida Chicken Coops{% endblock %}
+{% block description %}Thank you — your quote request has been received. We'll be in touch within one business day with pricing, a delivery window, and next steps.{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/contact/contact-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Request Received</p>
+    <h1 class="page-hero__title page-hero__title--stack">Thank you — <em>your request is in.</em></h1>
+    <p class="page-hero__lead">
+      We'll be in touch within one business day with pricing, a delivery window,
+      and next steps. Prefer to talk sooner? Call us at
+      <a href="{{ contact.phone_href }}">{{ contact.phone }}</a> or
+      <a href="{{ contact.whatsapp_href }}" target="_blank" rel="noopener noreferrer">message us on WhatsApp</a>.
+    </p>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">While You Wait</p>
+    <h2 class="cta__title">Take a look <em>around.</em></h2>
+    <p class="cta__sub">See the coops we build and exactly how we build them.</p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="/our-coops">See Our Coops</a>
+      <a class="btn btn--outline-dark" href="/how-we-build">
+        How We Build <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

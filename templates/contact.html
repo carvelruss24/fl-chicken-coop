@@ -36,15 +36,6 @@
     </div>
 
     <div class="contact__form-wrap">
-      {% if submitted %}
-      <div class="contact__success" role="status">
-        <h3>Thank you — your request is in.</h3>
-        <p>
-          We'll be in touch within one business day with pricing, a delivery
-          window, and next steps.
-        </p>
-      </div>
-      {% else %}
       {% if error %}
       <div class="contact__error" role="alert">
         <p>Sorry — we couldn't send your request just now. Please check the
@@ -70,7 +61,7 @@
           </div>
           <div class="field">
             <label for="zip">Zip Code <span class="req">*</span></label>
-            <input type="text" id="zip" name="zip" autocomplete="postal-code" inputmode="numeric" pattern="[0-9]{5}(-[0-9]{4})?" maxlength="10" required />
+            <input type="text" id="zip" name="zip" autocomplete="postal-code" required />
           </div>
         </div>
         <div class="field">
@@ -91,7 +82,6 @@
         <button class="btn btn--dark contact__submit" type="submit">Request a Quote</button>
         <p class="contact__note">No high-pressure follow-up. Just clear answers from the people who build them.</p>
       </form>
-      {% endif %}
     </div>
   </div>
 
