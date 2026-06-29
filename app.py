@@ -36,7 +36,7 @@ app.config.update(
 
     # --- Recipients of every form submission ---
     # Falls back to the public contact address if CONTACT_RECEIVER is unset.
-    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "mitchell@floridachickencoops.com"),
+    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "carvel@smashtoday.com"),
     CONTACT_CC=os.getenv("CONTACT_CC", ""),  # comma-separated, optional
 
     # --- reCAPTCHA ---
@@ -103,7 +103,7 @@ FOOTER_COLUMNS = [
 
 CONTACT = {
     "cta": {"label": "Contact Us", "url": "/contact"},
-    "email": "mitchell@floridachickencoops.com",
+    "email": "mitchell@FlChickenCoops.com",
     "phone": "(954) 324-3466",
     "phone_href": "tel:+19543243466",
     # Click-to-chat link (wa.me) using the business number in international
