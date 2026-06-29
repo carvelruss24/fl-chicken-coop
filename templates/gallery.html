@@ -45,7 +45,7 @@
 <section class="gallery">
   {% set regions_cycle = ["south-florida", "treasure-coast", "southwest-florida", "central-florida", "statewide"] %}
   <div class="gallery__grid">
-    {% for i in range(1, 19) %}
+    {% for i in range(1, 16) %}
     {% set region = regions_cycle[(i - 1) % regions_cycle|length] %}
     <figure class="gallery__item" data-region="{{ region }}">
       <div class="gallery__media" role="img" aria-label="Installed Florida Chicken Coop"
@@ -65,7 +65,7 @@
       <button class="pagination__btn" type="button" disabled>2</button>
       <button class="pagination__btn" type="button" disabled aria-label="Next page">&rarr;</button>
     </nav>
-    <p class="gallery__count">Showing 1–18 of 18</p>
+    <p class="gallery__count">Showing 1–15 of 15</p>
   </div>
 </section>
 {% endblock %}
