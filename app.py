@@ -104,12 +104,12 @@ FOOTER_COLUMNS = [
 CONTACT = {
     "cta": {"label": "Contact Us", "url": "/contact"},
     "email": "mitchell@FlChickenCoops.com",
-    "phone": "(954) 324-3466",
-    "phone_href": "tel:+19543243466",
+    "phone": "(305) 431-6505",
+    "phone_href": "tel:+13054316505",
     # Click-to-chat link (wa.me) using the business number in international
     # format, with a prefilled inquiry message customers can edit before sending.
     "whatsapp_href": (
-        "https://wa.me/19543243466"
+        "https://wa.me/13054316505"
         "?text=Hi%20Florida%20Chicken%20Coops%2C%20I%27d%20like%20to"
         "%20request%20a%20quote%20for%20a%20chicken%20coop."
     ),
