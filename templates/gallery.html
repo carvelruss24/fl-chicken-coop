@@ -44,26 +44,37 @@
 
 <section class="gallery">
   {% set regions_cycle = ["south-florida", "treasure-coast", "southwest-florida", "central-florida", "statewide"] %}
+  {# Each gallery page maps to one photo set in static/img/our-models/.
+     pre/post wrap the running number so the loop can rebuild each filename. #}
+  {% set pages = [
+    {"pre": "img/our-models/image-",        "post": ".webp",  "count": 15},
+    {"pre": "img/our-models/black/black (",  "post": ").webp", "count": 15},
+    {"pre": "img/our-models/white/white (",  "post": ").webp", "count": 20}
+  ] %}
   <div class="gallery__grid">
-    {% for i in range(1, 16) %}
+    {% for pg in pages %}
+    {% set pageno = loop.index %}
+    {% for i in range(1, pg.count + 1) %}
     {% set region = regions_cycle[(i - 1) % regions_cycle|length] %}
-    <figure class="gallery__item" data-region="{{ region }}">
+    <figure class="gallery__item" data-region="{{ region }}" data-page="{{ pageno }}"{% if pageno != 1 %} hidden{% endif %}>
       <div class="gallery__media" role="img" aria-label="Installed Florida Chicken Coop"
-           style="background-image: url('{{ url_for('static', filename='img/our-models/image-' ~ i ~ '.webp') }}')"></div>
+           style="background-image: url('{{ url_for('static', filename=pg.pre ~ i ~ pg.post) }}')"></div>
       <figcaption class="gallery__caption">
         <span class="gallery__loc">Location, FL</span>
         <span class="gallery__model">The Model · 12×6</span>
       </figcaption>
     </figure>
     {% endfor %}
+    {% endfor %}
   </div>
 
   <div class="gallery__footer">
     <nav class="pagination" aria-label="Gallery pages">
-      <button class="pagination__btn" type="button" disabled aria-label="Previous page">&larr;</button>
-      <button class="pagination__btn is-active" type="button" aria-current="page">1</button>
-      <button class="pagination__btn" type="button" disabled>2</button>
-      <button class="pagination__btn" type="button" disabled aria-label="Next page">&rarr;</button>
+      <button class="pagination__btn" type="button" data-page-nav="prev" disabled aria-label="Previous page">&larr;</button>
+      <button class="pagination__btn is-active" type="button" data-page="1" aria-current="page">1</button>
+      <button class="pagination__btn" type="button" data-page="2">2</button>
+      <button class="pagination__btn" type="button" data-page="3">3</button>
+      <button class="pagination__btn" type="button" data-page-nav="next" aria-label="Next page">&rarr;</button>
     </nav>
     <p class="gallery__count">Showing 1–15 of 15</p>
   </div>

@@ -44,11 +44,12 @@ function initHeaderScroll() {
 }
 
 /**
- * Gallery region filter + editorial masonry layout.
- * The filter buttons live in the hero bar; the cards live in the grid below.
- * Clicking a region shows the matching cards (or all), keeps the button ARIA
- * state in sync, updates the result count, and recomputes which visible cards
- * span wide so the 3-up / 2-up pattern stays tiled after filtering.
+ * Gallery region filter + pagination + editorial masonry layout.
+ * The filter buttons (hero bar) and pager (footer) drive the grid below, whose
+ * cards each carry a data-region and a data-page. A card shows only when it
+ * matches both the active region and the active page. Changing either keeps the
+ * relevant ARIA state in sync, updates the result count, and recomputes which
+ * visible cards span wide so the 3-up / 2-up pattern stays tiled.
  */
 function initGallery() {
   const grid = document.querySelector('.gallery__grid');
@@ -59,7 +60,21 @@ function initGallery() {
   const countEl = document.querySelector('.gallery__count');
   const WIDE = new Set([3, 4]);    // 4th & 5th card in each run of 5 spans wide
 
+  // Pager: numbered buttons carry data-page; prev/next carry data-page-nav.
+  const pageButtons = Array.from(document.querySelectorAll('.pagination__btn[data-page]'));
+  const prevBtn = document.querySelector('.pagination__btn[data-page-nav="prev"]');
+  const nextBtn = document.querySelector('.pagination__btn[data-page-nav="next"]');
+  const lastPage = items.reduce((max, it) => Math.max(max, Number(it.dataset.page) || 1), 1);
+
+  let region = 'all';
+  let page = 1;
+
   const layout = () => {
+    items.forEach((it) => {
+      const onPage = (Number(it.dataset.page) || 1) === page;
+      const inRegion = region === 'all' || it.dataset.region === region;
+      it.hidden = !(onPage && inRegion);
+    });
     const visible = items.filter((it) => !it.hidden);
     visible.forEach((it, i) => {
       it.classList.toggle('gallery__item--wide', WIDE.has(i % 5));
@@ -72,10 +87,16 @@ function initGallery() {
     }
   };
 
-  const applyFilter = (region) => {
-    items.forEach((it) => {
-      it.hidden = region !== 'all' && it.dataset.region !== region;
+  const goToPage = (p) => {
+    page = Math.min(Math.max(p, 1), lastPage);
+    pageButtons.forEach((b) => {
+      const on = Number(b.dataset.page) === page;
+      b.classList.toggle('is-active', on);
+      if (on) b.setAttribute('aria-current', 'page');
+      else b.removeAttribute('aria-current');
     });
+    if (prevBtn) prevBtn.disabled = page === 1;
+    if (nextBtn) nextBtn.disabled = page === lastPage;
     layout();
   };
 
@@ -86,11 +107,18 @@ function initGallery() {
         b.classList.toggle('is-active', on);
         b.setAttribute('aria-pressed', String(on));
       });
-      applyFilter(btn.dataset.region);
+      region = btn.dataset.region;
+      layout();
     });
   });
 
-  layout();                        // establish the initial span pattern + count
+  pageButtons.forEach((b) => {
+    b.addEventListener('click', () => goToPage(Number(b.dataset.page)));
+  });
+  if (prevBtn) prevBtn.addEventListener('click', () => goToPage(page - 1));
+  if (nextBtn) nextBtn.addEventListener('click', () => goToPage(page + 1));
+
+  goToPage(1);                     // establish initial page, span pattern + count
 }
 
 /**
