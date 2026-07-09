@@ -13,30 +13,33 @@ come online — no nav changes required.
 
 import os
 import html
-import smtplib
 import logging
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
+import requests
 from flask import Flask, render_template, request, redirect, url_for
 from dotenv import load_dotenv
 
-# Load SMTP / recipient settings from a local .env file (never committed).
+# Load Resend / recipient settings from a local .env file (never committed).
 load_dotenv()
 
 app = Flask(__name__)
 
 app.config.update(
-    # --- SMTP (outgoing mail server that sends the notification) ---
-    SMTP_HOST=os.getenv("SMTP_HOST", "smtp.gmail.com"),
-    SMTP_PORT=int(os.getenv("SMTP_PORT", "465")),
-    SMTP_USER=os.getenv("SMTP_USER", ""),
-    SMTP_PASS=os.getenv("SMTP_PASS", ""),
+    # --- Resend (HTTPS email API that sends the notification — no SMTP) ---
+    # send_contact_email() POSTs to Resend's REST API over HTTPS, which sidesteps
+    # VPS port-25/SMTP blocks and gives inbox-grade deliverability (SPF/DKIM are
+    # handled by Resend once flchickencoops.com is verified in their dashboard).
+    RESEND_API_KEY=os.getenv("RESEND_API_KEY", ""),
+    # Must be an address on a domain you've verified in Resend. The display-name
+    # form is allowed: "Florida Chicken Coops <quotes@flchickencoops.com>".
+    RESEND_FROM=os.getenv(
+        "RESEND_FROM", "Florida Chicken Coops <quotes@flchickencoops.com>"
+    ),
 
     # --- Recipients of every form submission ---
-    # Falls back to the public contact address if CONTACT_RECEIVER is unset.
-    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "carvel@smashtoday.com"),
+    # Falls back to the business inbox if CONTACT_RECEIVER is unset.
+    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "mitchell@flchickencoops.com"),
     CONTACT_CC=os.getenv("CONTACT_CC", ""),  # comma-separated, optional
 
     # --- reCAPTCHA ---
@@ -146,8 +149,6 @@ def verify_recaptcha(token: str) -> bool:
         return True
 
     try:
-        import requests  # imported lazily so it's only needed when enabled
-
         resp = requests.post(
             "https://www.google.com/recaptcha/api/siteverify",
             data={"secret": secret, "response": token.strip()},
@@ -160,16 +161,19 @@ def verify_recaptcha(token: str) -> bool:
 
 
 def send_contact_email(name, email, phone, zip_code, size, notes) -> bool:
-    """Email a contact/quote-request submission to the business. Returns success."""
+    """Email a contact/quote-request submission to the business. Returns success.
+
+    Delivery goes through Resend's HTTPS API (no SMTP). Needs RESEND_API_KEY and
+    a RESEND_FROM address on a domain verified in the Resend dashboard.
+    """
     cfg = app.config
 
-    if not cfg["SMTP_USER"] or not cfg["SMTP_PASS"]:
-        logger.error("SMTP credentials not configured — cannot send email.")
+    if not cfg["RESEND_API_KEY"]:
+        logger.error("RESEND_API_KEY not configured — cannot send email.")
         return False
 
-    receiver = cfg["CONTACT_RECEIVER"] or cfg["SMTP_USER"]
+    receiver = cfg["CONTACT_RECEIVER"]
     cc_list = [addr.strip() for addr in cfg["CONTACT_CC"].split(",") if addr.strip()]
-    all_recipients = [receiver] + cc_list
 
     size_label = SIZE_LABELS.get(size, size or "Not specified")
     submitted_at = datetime.now().strftime("%B %d, %Y at %I:%M %p")
@@ -179,16 +183,6 @@ def send_contact_email(name, email, phone, zip_code, size, notes) -> bool:
     e_name, e_email, e_phone, e_zip, e_size, e_notes = (
         html.escape(v) for v in (name, email, phone, zip_code, size_label, notes)
     )
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = f"New Quote Request from {name} — Florida Chicken Coops"
-    msg["From"] = cfg["SMTP_USER"]
-    msg["To"] = receiver
-    if cc_list:
-        msg["Cc"] = ", ".join(cc_list)
-    # Let the business reply straight to the customer.
-    if email:
-        msg["Reply-To"] = email
 
     html_body = f"""\
     <h2 style="font-family:Georgia,serif;color:#2b2b2b;">New Quote Request</h2>
@@ -211,17 +205,33 @@ def send_contact_email(name, email, phone, zip_code, size, notes) -> bool:
         f"Coop Size: {size_label}\n"
         f"Notes:     {notes or '—'}\n"
     )
-    msg.attach(MIMEText(text_body, "plain"))
-    msg.attach(MIMEText(html_body, "html"))
+    payload = {
+        "from": cfg["RESEND_FROM"],
+        "to": [receiver],
+        "subject": f"New Quote Request from {name} — Florida Chicken Coops",
+        "html": html_body,
+        "text": text_body,
+    }
+    if cc_list:
+        payload["cc"] = cc_list
+    # Let the business reply straight to the customer.
+    if email:
+        payload["reply_to"] = email
 
     try:
-        with smtplib.SMTP_SSL(cfg["SMTP_HOST"], cfg["SMTP_PORT"], timeout=15) as server:
-            server.login(cfg["SMTP_USER"], cfg["SMTP_PASS"])
-            server.sendmail(cfg["SMTP_USER"], all_recipients, msg.as_string())
-        logger.info("Contact email sent to %s", all_recipients)
+        resp = requests.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {cfg['RESEND_API_KEY']}"},
+            json=payload,
+            timeout=15,
+        )
+        if resp.status_code >= 400:
+            logger.error("Resend API error %s: %s", resp.status_code, resp.text)
+            return False
+        logger.info("Contact email sent to %s via Resend", [receiver] + cc_list)
         return True
     except Exception as exc:
-        logger.error("SMTP send failed: %s", exc)
+        logger.error("Resend send failed: %s", exc)
         return False
 
 
