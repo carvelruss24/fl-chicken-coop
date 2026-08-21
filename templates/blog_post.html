@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ post['seo_title'] or post['title'] }} | Florida Chicken Coops{% endblock %}
+{% block description %}{{ post['excerpt'] or post['title'] }}{% endblock %}
+
+{% block head_extra %}
+{# Open Graph image falls back to the featured image, matching the editor. #}
+<meta property="og:title" content="{{ post['seo_title'] or post['title'] }}" />
+<meta property="og:description" content="{{ post['excerpt'] or '' }}" />
+{% if post['cover_image'] %}
+<meta property="og:image" content="{{ post['cover_image'] }}" />
+{% endif %}
+{% if is_preview %}<meta name="robots" content="noindex, nofollow" />{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if is_preview %}
+<p class="post-previewbar">
+  Preview — this is unsaved draft content and isn't visible to the public.
+</p>
+{% endif %}
+
+<section class="page-hero page-hero--post"
+         style="background-image: url('{{ post['cover_image'] or url_for('static', filename='img/about-us/about-us-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">
+      {% if post['category'] %}{{ post['category'] }} &middot; {% endif %}
+      {{ (post['published_at'] or post['updated_at']) | pretty_date }}
+    </p>
+    <h1 class="page-hero__title">{{ post['title'] }}</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+
+    <div class="post-meta">
+      {% if post['author_avatar'] %}
+      <img class="post-meta__avatar" src="{{ post['author_avatar'] }}" alt="" />
+      {% endif %}
+      <div>
+        <p class="post-meta__author">{{ post['author_name'] or post['author'] or 'Florida Chicken Coops' }}</p>
+        <p class="post-meta__sub">
+          {{ (post['published_at'] or post['updated_at']) | pretty_date }}
+          {% if post['read_time'] %} &middot; {{ post['read_time'] }} min read{% endif %}
+        </p>
+      </div>
+    </div>
+
+    {# Overview sits below the hero and above the cover image, exactly as the
+       editor's field description promises. #}
+    {% if post['overview'] %}
+    <p class="post-overview">{{ post['overview'] }}</p>
+    {% endif %}
+
+    {% if post['cover_image'] %}
+    <figure class="post-cover">
+      <img src="{{ post['cover_image'] }}" alt="{{ post['caption'] or post['title'] }}" />
+      {% if post['caption'] %}
+      <figcaption>{{ post['caption'] }}</figcaption>
+      {% endif %}
+    </figure>
+    {% endif %}
+
+    <article class="post-body">
+      {{ post['body'] | post_html }}
+    </article>
+
+    {% set tags = post['tags'] | tag_list %}
+    {% if tags %}
+    <ul class="post-tags">
+      {% for tag in tags %}<li>{{ tag }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+
+    <p class="post-back">
+      <a href="{{ url_for('blog') }}">&larr; All posts</a>
+    </p>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Ready When You Are</p>
+    <h2 class="cta__title">Let's build your <em>coop.</em></h2>
+    <p class="cta__sub">Tell us your flock size and we'll send pricing and a delivery window.</p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="/our-coops">
+        See Our Coops <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

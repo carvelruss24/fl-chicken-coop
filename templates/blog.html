@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Blog | Florida Chicken Coops{% endblock %}
+{% block description %}Care guides, build notes, and Florida-specific advice for keeping a healthy backyard flock.{% endblock %}
+
+{% block content %}
+<section class="page-hero"
+         style="background-image: url('{{ url_for('static', filename='img/about-us/about-us-hero-section.webp') }}')">
+  <div class="page-hero__inner container">
+    <p class="eyebrow eyebrow--light">Blog</p>
+    <h1 class="page-hero__title">Notes from <em>the coop.</em></h1>
+    <p class="page-hero__lead">
+      Care guides, build notes, and Florida-specific advice for keeping a healthy flock.
+    </p>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    {% if posts %}
+    <ul class="blog-grid">
+      {% for post in posts %}
+      <li class="blog-card">
+        <a class="blog-card__link" href="{{ url_for('blog_post', slug=post['slug']) }}">
+          {% if post['cover_image'] %}
+          <img class="blog-card__img" src="{{ post['cover_image'] }}" alt="" loading="lazy" />
+          {% endif %}
+          <div class="blog-card__body">
+            <p class="blog-card__date">{{ (post['published_at'] or post['updated_at']) | pretty_date }}</p>
+            <h2 class="blog-card__title">{{ post['title'] }}</h2>
+            {% if post['excerpt'] %}
+            <p class="blog-card__excerpt">{{ post['excerpt'] | truncate(160) }}</p>
+            {% endif %}
+            <span class="blog-card__more">Read more <span aria-hidden="true">&rarr;</span></span>
+          </div>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="blog-empty">No posts published yet — check back soon.</p>
+    {% endif %}
+  </div>
+</section>
+
+<section class="cta">
+  <div class="container">
+    <p class="eyebrow">Ready When You Are</p>
+    <h2 class="cta__title">Let's build your <em>coop.</em></h2>
+    <p class="cta__sub">Tell us your flock size and we'll send pricing and a delivery window.</p>
+    <div class="cta__actions">
+      <a class="btn btn--dark" href="{{ contact.cta.url }}">Request a Quote</a>
+      <a class="btn btn--outline-dark" href="/our-coops">
+        See Our Coops <span aria-hidden="true">&rarr;</span>
+      </a>
+    </div>
+  </div>
+</section>
+{% endblock %}

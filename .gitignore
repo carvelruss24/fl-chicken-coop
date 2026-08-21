@@ -1,6 +1,15 @@
 # Environment & secrets
 .env
 
+# Editor image uploads — user content, not source. Keep the folder, not the files.
+static/uploads/*
+!static/uploads/.gitkeep
+
+# SQLite database (leads + blog posts live here)
+instance/
+*.db
+*.sqlite3
+
 # Python
 __pycache__/
 *.pyc
@@ -13,6 +22,9 @@ venv/
 
 # Screenshots (from _shot.py)
 *.png
+# ...but site imagery is part of the build and must be committed.
+!static/img/*.png
+!static/img/**/*.png
 
 # IDE
 .vscode/

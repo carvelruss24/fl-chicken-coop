@@ -1,0 +1,320 @@
+{% extends "admin/base.html" %}
+{% set active_nav = 'posts' %}
+{# `post` is a DB row when editing, a plain dict when re-rendering after a
+   validation error, and None for a brand-new post — subscripting all three is
+   safe because Jinja turns a missing key into Undefined. #}
+{% set p = post or {} %}
+{% set title_val   = p['title'] or '' %}
+{% set slug_val    = p['slug'] or '' %}
+{% set status_val  = p['status'] or 'draft' %}
+{% set seo_title   = p['seo_title'] or '' %}
+{% set meta_desc   = p['excerpt'] or '' %}
+{% set cover       = p['cover_image'] or '' %}
+{% set avatar      = p['author_avatar'] or '' %}
+{% set author_val  = p['author_name'] or default_author %}
+{% set tag_list    = p['tags'] | tag_list %}
+{% block title %}{{ 'Create New Post' if is_new else 'Edit Post' }}{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin-editor.css') }}" />
+{% endblock %}
+
+{# --- Action bar: back, title, dirty/status chips, Preview/Save/Publish --- #}
+{% block topbar %}
+<header class="ad-topbar ed-topbar">
+  <button class="ad-burger" type="button" aria-expanded="false" aria-controls="ad-sidebar" aria-label="Open menu">
+    <span></span>
+  </button>
+
+  <a class="ed-back" href="{{ url_for('admin.posts') }}" aria-label="Back to blog posts">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+  </a>
+
+  <h1 class="ad-topbar__title">{{ 'Create New Post' if is_new else 'Edit Post' }}</h1>
+
+  <div class="ed-topbar__actions">
+    <span class="ed-dirty" id="ed-dirty" hidden>
+      <span class="ed-dot" aria-hidden="true"></span>Unsaved changes
+    </span>
+    <span class="ed-statuschip ed-statuschip--{{ status_val }}" id="ed-statuschip">
+      <span class="ed-dot" aria-hidden="true"></span>{{ status_val | capitalize }}
+    </span>
+
+    <button class="ad-btn ad-btn--ghost" type="submit" form="post-form"
+            formaction="{{ url_for('admin.post_preview') }}" formmethod="post"
+            formtarget="_blank" formnovalidate>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+      Preview
+    </button>
+
+    <button class="ad-btn ad-btn--ghost" type="submit" form="post-form"
+            name="action" value="draft">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Save Draft
+    </button>
+
+    <button class="ad-btn" type="submit" form="post-form" name="action" value="publish">
+      {{ 'Create Post' if is_new else 'Publish' }}
+    </button>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<form class="ed-layout" id="post-form" method="post"
+      action="{{ url_for('admin.post_new') if is_new else url_for('admin.post_edit', post_id=post_id) }}">
+
+  {# Status is a hidden field kept in sync with the sidebar select, so the
+     Save Draft / Publish buttons stay authoritative server-side. #}
+  <input type="hidden" name="status" id="post-status-value" value="{{ status_val }}" />
+
+  <!-- ================= MAIN COLUMN ================= -->
+  <div class="ed-main">
+
+    <section class="ad-card ed-card">
+      <div class="ed-card__head">
+        <label class="ed-label" for="post-title">Post title</label>
+        <span class="ed-counter" id="title-counter" data-max="60">0/60</span>
+      </div>
+      <div class="ed-card__body">
+        <input class="ed-title" id="post-title" name="title" type="text"
+               value="{{ title_val }}" maxlength="120" required
+               placeholder="Add a clear, descriptive title…" autocomplete="off" />
+        <p class="ed-permalink">
+          <strong>Permalink:</strong>
+          <span class="ed-permalink__base">/blogs/</span><span id="permalink-slug">{{ slug_val }}</span>
+        </p>
+      </div>
+    </section>
+
+    <section class="ad-card ed-card">
+      <div class="ed-card__head">
+        <label class="ed-label" for="post-overview">Overview</label>
+      </div>
+      <div class="ed-card__body">
+        <textarea class="ad-textarea ed-overview" id="post-overview" name="overview"
+                  placeholder="Intro shown below the hero, above the cover image...">{{ p['overview'] or '' }}</textarea>
+      </div>
+    </section>
+
+    <section class="ad-card ed-card">
+      <div class="ed-card__head">
+        <span class="ed-label">Content</span>
+        <div class="ed-import">
+          <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button" id="import-toggle"
+                  aria-expanded="false" aria-haspopup="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/></svg>
+            Import
+            <svg class="ed-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+          </button>
+          <div class="ed-menu" id="import-menu" hidden>
+            <button type="button" class="ed-menu__item" data-import="html">Paste HTML…</button>
+            <button type="button" class="ed-menu__item" data-import="text">Paste plain text…</button>
+            <label class="ed-menu__item">
+              Upload .html file…
+              <input type="file" id="import-file" accept=".html,.htm,.txt" hidden />
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="ed-editorwrap">
+        <textarea id="post-body" name="body">{{ p['body'] or '' }}</textarea>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= RIGHT SIDEBAR ================= -->
+  <aside class="ed-side">
+    <div class="ed-tabs" role="tablist">
+      <button class="ed-tab is-active" type="button" role="tab" id="tab-post"
+              aria-controls="panel-post" aria-selected="true">Post Settings</button>
+      <button class="ed-tab" type="button" role="tab" id="tab-seo"
+              aria-controls="panel-seo" aria-selected="false">SEO Settings</button>
+    </div>
+
+    <!-- ---- Post Settings ---- -->
+    <div class="ed-panel" id="panel-post" role="tabpanel" aria-labelledby="tab-post">
+
+      <h2 class="ed-grouphead">Status &amp; Visibility</h2>
+
+      <div class="ad-field">
+        <label for="post-status">Status</label>
+        <div class="ed-selectwrap">
+          <span class="ed-dot ed-dot--{{ status_val }}" id="status-dot" aria-hidden="true"></span>
+          <select class="ad-select ed-select--dotted" id="post-status">
+            {% for s in statuses %}
+            <option value="{{ s }}" {{ 'selected' if s == status_val }}>{{ s | capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="ad-field">
+        <label for="post-published">Publish date</label>
+        {# Starts as type=text so "Not published yet" is actually visible —
+           datetime-local ignores placeholder. admin-editor.js swaps the type on
+           focus so the native picker still works. #}
+        <input class="ad-input" id="post-published" name="published_at"
+               type="{{ 'datetime-local' if p['published_at'] else 'text' }}"
+               value="{{ p['published_at'] | dt_local }}"
+               placeholder="Not published yet" />
+      </div>
+
+      <div class="ed-grid2">
+        <div class="ad-field">
+          <label for="post-readtime">Read time</label>
+          <input class="ad-input" id="post-readtime" type="text" disabled
+                 value="{{ (p['read_time'] ~ ' min') if p['read_time'] else '—' }}" />
+        </div>
+        <div class="ad-field">
+          <label for="post-views">Views</label>
+          <input class="ad-input" id="post-views" type="text" disabled
+                 value="{{ p['views'] or 0 }}" />
+        </div>
+      </div>
+
+      <h2 class="ed-grouphead">Featured Image</h2>
+      <div class="ad-field">
+        <div class="ed-drop {{ 'has-image' if cover }}" id="cover-drop"
+             data-target="post-cover" tabindex="0" role="button"
+             aria-label="Upload a featured image">
+          <input type="hidden" name="cover_image" id="post-cover" value="{{ cover }}" />
+          <img class="ed-drop__preview" id="cover-preview" src="{{ cover }}" alt=""
+               {% if not cover %}hidden{% endif %} />
+          <div class="ed-drop__prompt" {% if cover %}hidden{% endif %}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 9l5-5 5 5"/><path d="M12 4v12"/></svg>
+            <p class="ed-drop__title">Drag &amp; drop, or <span>click to browse</span></p>
+            <p class="ed-drop__hint">PNG, JPG, WEBP or GIF</p>
+          </div>
+          <button class="ed-drop__clear" type="button" id="cover-clear"
+                  {% if not cover %}hidden{% endif %}>Remove</button>
+        </div>
+        <p class="ed-uploaderr" id="cover-error" hidden></p>
+      </div>
+
+      <div class="ad-field">
+        <label for="post-caption">Caption</label>
+        <input class="ad-input" id="post-caption" name="caption" type="text"
+               value="{{ p['caption'] or '' }}"
+               placeholder="Describe the featured image..." />
+      </div>
+
+      <h2 class="ed-grouphead">Author</h2>
+      <div class="ed-author">
+        <img class="ed-author__img" id="avatar-preview" src="{{ avatar }}" alt=""
+             {% if not avatar %}hidden{% endif %} />
+        <span class="ed-author__initials" id="avatar-initials"
+              {% if avatar %}hidden{% endif %} aria-hidden="true">{{ author_val[:2] | upper }}</span>
+        <input type="hidden" name="author_avatar" id="post-avatar" value="{{ avatar }}" />
+        <div class="ed-author__actions">
+          <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button" id="avatar-pick">
+            Change Avatar
+          </button>
+          <button class="ed-linkbtn" type="button" id="avatar-clear"
+                  {% if not avatar %}hidden{% endif %}>Remove</button>
+        </div>
+      </div>
+      <div class="ad-field">
+        <label for="post-author">Name</label>
+        <input class="ad-input" id="post-author" name="author_name" type="text"
+               value="{{ author_val }}" placeholder="Author name" />
+      </div>
+
+      <h2 class="ed-grouphead">Category &amp; Tags</h2>
+      <div class="ad-field">
+        <label for="post-category">Category</label>
+        <input class="ad-input" id="post-category" name="category" type="text"
+               list="category-options" value="{{ p['category'] or '' }}"
+               placeholder="Select or type a category..." />
+        <datalist id="category-options">
+          {% for c in all_categories %}<option value="{{ c }}"></option>{% endfor %}
+        </datalist>
+      </div>
+
+      <div class="ad-field">
+        <label for="tag-input">Tags</label>
+        <div class="ed-tagbox" id="tag-box">
+          <ul class="ed-chips" id="tag-chips">
+            {% for t in tag_list %}
+            <li class="ed-chip" data-tag="{{ t }}">{{ t }}<button type="button"
+                aria-label="Remove tag {{ t }}">&times;</button></li>
+            {% endfor %}
+          </ul>
+          <input class="ed-taginput" id="tag-input" type="text"
+                 list="tag-options" placeholder="Add a tag..." autocomplete="off" />
+          <datalist id="tag-options">
+            {% for t in all_tags %}<option value="{{ t }}"></option>{% endfor %}
+          </datalist>
+        </div>
+        <input type="hidden" name="tags" id="post-tags" value="{{ p['tags'] or '' }}" />
+        <span class="ad-field__hint">Press Enter to add</span>
+      </div>
+    </div>
+
+    <!-- ---- SEO Settings ---- -->
+    <div class="ed-panel" id="panel-seo" role="tabpanel" aria-labelledby="tab-seo" hidden>
+      <h2 class="ed-grouphead">Search Engine Optimisation</h2>
+
+      <div class="ad-field">
+        <div class="ed-fieldhead">
+          <label for="post-seotitle">SEO Title <span class="ed-muted">— auto-filled from the Post Title</span></label>
+          <span class="ed-counter" id="seo-counter" data-max="60">0/60</span>
+        </div>
+        <input class="ad-input" id="post-seotitle" name="seo_title" type="text"
+               value="{{ seo_title }}" maxlength="120"
+               placeholder="Add a Post Title to populate this" />
+      </div>
+
+      <div class="ad-field">
+        <label for="post-slug">URL Slug</label>
+        <input class="ad-input" id="post-slug" name="slug" type="text"
+               value="{{ slug_val }}" placeholder="post-url-slug" autocomplete="off" />
+      </div>
+
+      <div class="ad-field">
+        <div class="ed-fieldhead">
+          <label for="post-meta">Meta Description
+            <span class="ed-muted">— excerpt shown on the blog list &amp; in search results</span>
+          </label>
+          <span class="ed-counter" id="meta-counter" data-max="160">0/160</span>
+        </div>
+        <textarea class="ad-textarea ed-meta" id="post-meta" name="excerpt"
+                  placeholder="Short summary shown on the blog list and in search results...">{{ meta_desc }}</textarea>
+      </div>
+
+      <div class="ad-field">
+        <label for="post-og">Open Graph Image <span class="ed-muted">— auto-filled from the Featured Image</span></label>
+        <input class="ad-input" id="post-og" type="text" disabled
+               value="{{ cover }}" placeholder="Set a Featured Image in Post Settings" />
+      </div>
+
+      <div class="ed-serp" aria-label="Search result preview">
+        <p class="ed-serp__url">{{ seo_domain }}/blogs/<span id="serp-slug">{{ slug_val }}</span></p>
+        <p class="ed-serp__title" id="serp-title">Post title</p>
+        <p class="ed-serp__desc" id="serp-desc">Your meta description appears here.</p>
+      </div>
+
+      <ul class="ed-checks" id="seo-checks">
+        <li data-check="title"><span class="ed-checkmark">!</span> Title: <span>0/60</span> chars</li>
+        <li data-check="desc"><span class="ed-checkmark">!</span> Description: <span>0/160</span> chars</li>
+      </ul>
+    </div>
+  </aside>
+
+  {# One hidden file input serves the featured image, the avatar, and any
+     drag-and-drop, so there is a single upload path to reason about. #}
+  <input type="file" id="upload-input" accept=".png,.jpg,.jpeg,.webp,.gif" hidden />
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='vendor/tinymce/tinymce.min.js') }}"></script>
+<script>
+  window.EDITOR_CONFIG = {
+    uploadUrl: {{ url_for('admin.upload') | tojson }},
+    tinymceBase: {{ url_for('static', filename='vendor/tinymce') | tojson }},
+    isNew: {{ is_new | tojson }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/admin-editor.js') }}" defer></script>
+{% endblock %}

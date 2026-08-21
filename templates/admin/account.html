@@ -1,0 +1,348 @@
+{% extends "admin/base.html" %}
+{% set active_nav = 'account' %}
+{% block title %}Account{% endblock %}
+{% block heading %}Account settings{% endblock %}
+
+{% block content %}
+{# One grid for the whole page: main column + identity rail. Everything lives
+   inside it so every card shares the same left and right edge. #}
+<div class="ac-layout">
+  <div class="ac-main">
+
+    {% if new_credentials %}
+    {# Shown once, straight after provisioning or resetting. Only the hash is
+       stored, so this is the single opportunity to copy the password. #}
+    <section class="ad-card ac-handover">
+      <div class="ad-card__head">
+        <h2>
+          {{ 'Client account created' if new_credentials.kind == 'created'
+             else 'Client password reset' }}
+        </h2>
+        <span class="ad-pill ad-pill--published">Copy now</span>
+      </div>
+      <div class="ad-card__body">
+        <p class="ac-note">
+          This password isn't stored anywhere and won't be shown again. Copy it
+          before you leave this page — if you lose it, reset it rather than
+          guessing.
+        </p>
+        <dl class="ac-creds">
+          <dt>Username</dt>
+          <dd><code>{{ new_credentials.username }}</code></dd>
+          <dt>Password</dt>
+          <dd><code>{{ new_credentials.password }}</code></dd>
+        </dl>
+        <div class="ad-actions">
+          <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button"
+                  data-copy="{{ new_credentials.password }}">Copy password</button>
+          <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button"
+                  data-copy="Username: {{ new_credentials.username }}&#10;Password: {{ new_credentials.password }}">Copy both</button>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+    {% if is_developer %}
+    {% if not client %}
+    <!-- ---------- No client account yet: the page's primary action ---------- -->
+    <section class="ad-card ac-cta">
+      <div class="ad-card__head">
+        <h2>Client account</h2>
+        <span class="ad-pill">Not created</span>
+      </div>
+      <div class="ad-card__body">
+        <p class="ac-cta__lead">
+          You're signed in with the developer account, and no client account
+          exists yet.
+        </p>
+        <ul class="ac-points">
+          <li>Gives the business its own username and password.</li>
+          <li>They can manage leads and blog posts, exactly as you can.</li>
+          <li>They won't see this panel, or your developer login.</li>
+        </ul>
+        <button class="ad-btn ad-btn--lg" type="button" id="ac-reveal"
+                aria-expanded="false" aria-controls="ac-createform">
+          Create the client account
+        </button>
+      </div>
+
+      <form class="ac-createform" id="ac-createform" method="post"
+            action="{{ url_for('admin.client_create') }}" hidden>
+        <div class="ad-card__body">
+          <div class="ad-grid2">
+            <div class="ad-field">
+              <label for="c-username">Username</label>
+              <input class="ad-input" id="c-username" name="username" required
+                     value="{{ suggested.username }}" autocapitalize="none"
+                     spellcheck="false" pattern="[a-z0-9][a-z0-9._\-]{2,31}" />
+              <span class="ad-field__hint">
+                Lowercase letters, numbers, dots, dashes or underscores.
+              </span>
+            </div>
+            <div class="ad-field">
+              <label for="c-name">Display name</label>
+              <input class="ad-input" id="c-name" name="display_name"
+                     value="{{ suggested.display_name }}" />
+              <span class="ad-field__hint">Shown in the dashboard, not used to sign in.</span>
+            </div>
+          </div>
+
+          <div class="ad-field">
+            <label for="c-email">Email</label>
+            <input class="ad-input" id="c-email" name="email" type="email"
+                   value="{{ suggested.email }}" />
+          </div>
+
+          <div class="ad-field">
+            <label for="c-password">Password</label>
+            <div class="ac-pw" data-pwgroup>
+              <input class="ad-input" id="c-password" name="password" type="text"
+                     value="{{ suggested.password }}" minlength="10" required
+                     autocomplete="new-password" spellcheck="false" />
+              <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button"
+                      data-regenerate="c-password" title="Generate a new password">New</button>
+              <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button"
+                      data-copy-field="c-password">Copy</button>
+            </div>
+            <span class="ad-field__hint">
+              Generated for you — at least 10 characters. Edit it if you prefer.
+              It's shown in the clear so you can pass it on.
+            </span>
+          </div>
+
+          <div class="ad-field" style="margin-bottom:0">
+            <label for="c-confirm">Confirm password</label>
+            <input class="ad-input" id="c-confirm" name="confirm_password" type="text"
+                   value="{{ suggested.password }}" minlength="10" required
+                   autocomplete="new-password" spellcheck="false" />
+          </div>
+        </div>
+        <div class="ad-card__foot">
+          <button class="ad-btn" type="submit">Create the client account</button>
+          <button class="ad-btn ad-btn--ghost" type="button" id="ac-cancel">Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    {% else %}
+    <!-- ---------- Client account exists: one card, three sections ---------- -->
+    <section class="ad-card">
+      <div class="ad-card__head">
+        <h2>Client account</h2>
+        <span class="ad-pill ad-pill--published">Active</span>
+      </div>
+
+      <form method="post" action="{{ url_for('admin.client_profile') }}">
+        <div class="ad-card__body">
+          <div class="ad-grid2">
+            <div class="ad-field">
+              <label for="cp-username">Username</label>
+              <input class="ad-input" id="cp-username" name="username" required
+                     value="{{ client['username'] }}" autocapitalize="none"
+                     spellcheck="false" pattern="[a-z0-9][a-z0-9._\-]{2,31}"
+                     data-original="{{ client['username'] }}" />
+              <span class="ad-field__hint" id="cp-username-hint">
+                This is what they type to sign in.
+              </span>
+            </div>
+            <div class="ad-field">
+              <label for="cp-name">Display name</label>
+              <input class="ad-input" id="cp-name" name="display_name"
+                     value="{{ client['display_name'] }}" />
+            </div>
+          </div>
+          <div class="ad-field" style="margin-bottom:0">
+            <label for="cp-email">Email</label>
+            <input class="ad-input" id="cp-email" name="email" type="email"
+                   value="{{ client['email'] }}" />
+          </div>
+        </div>
+        <div class="ad-card__foot">
+          <button class="ad-btn" type="submit">Save changes</button>
+          <span class="ac-meta">
+            Created {{ client['created_at'] | pretty_date }}
+            &middot;
+            {% if client['last_login_at'] %}
+            last signed in {{ client['last_login_at'] | pretty_date(true) }}
+            {% else %}
+            hasn't signed in yet
+            {% endif %}
+          </span>
+        </div>
+      </form>
+
+      <div class="ac-section">
+        <div class="ac-section__head">
+          <h3>Reset their password</h3>
+          <p>Sets a new one without needing the old. You'll see it once, to pass on.</p>
+        </div>
+        <form method="post" action="{{ url_for('admin.client_password') }}">
+          <div class="ad-card__body">
+            <div class="ad-grid2">
+              <div class="ad-field">
+                <label for="cr-password">New password</label>
+                <div class="ac-pw" data-pwgroup>
+                  <input class="ad-input" id="cr-password" name="password" type="text"
+                         minlength="10" required autocomplete="new-password"
+                         spellcheck="false" placeholder="At least 10 characters" />
+                  <button class="ad-btn ad-btn--ghost ad-btn--sm" type="button"
+                          data-regenerate="cr-password">Generate</button>
+                </div>
+              </div>
+              <div class="ad-field">
+                <label for="cr-confirm">Confirm password</label>
+                <input class="ad-input" id="cr-confirm" name="confirm_password" type="text"
+                       minlength="10" required autocomplete="new-password"
+                       spellcheck="false" />
+              </div>
+            </div>
+          </div>
+          <div class="ad-card__foot">
+            <button class="ad-btn" type="submit">Reset password</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="ac-section ac-danger">
+        <div class="ac-danger__inner">
+          <div>
+            <h3>Remove client access</h3>
+            <p>
+              Deletes the <strong>{{ client['username'] }}</strong> login only.
+              Blog posts, leads and uploaded images are all kept.
+            </p>
+          </div>
+          <form method="post" action="{{ url_for('admin.client_delete') }}"
+                data-confirm="Delete the client login “{{ client['username'] }}”? They will no longer be able to sign in. Posts and leads are kept.">
+            <button class="ad-btn ad-btn--danger" type="submit">Delete account</button>
+          </form>
+        </div>
+      </div>
+    </section>
+    {% endif %}
+    {% endif %}
+
+    <!-- ---------- Your own account ---------- -->
+    <section class="ad-card">
+      <div class="ad-card__head">
+        <h2>{{ 'Your developer profile' if is_developer else 'Your profile' }}</h2>
+      </div>
+      <form method="post" action="{{ url_for('admin.account') }}">
+        <input type="hidden" name="action" value="profile" />
+        <div class="ad-card__body">
+          <div class="ad-grid2">
+            <div class="ad-field">
+              <label for="acc-name">Display name</label>
+              <input class="ad-input" id="acc-name" name="display_name"
+                     value="{{ g.user['display_name'] }}" />
+            </div>
+            <div class="ad-field">
+              <label for="acc-email">Email</label>
+              <input class="ad-input" id="acc-email" name="email" type="email"
+                     value="{{ g.user['email'] }}" />
+            </div>
+          </div>
+          <div class="ad-field" style="margin-bottom:0">
+            <label for="acc-username">Username</label>
+            <input class="ad-input" id="acc-username" value="{{ g.user['username'] }}" disabled />
+            <span class="ad-field__hint">Your own sign-in username can't be changed here.</span>
+          </div>
+        </div>
+        <div class="ad-card__foot">
+          <button class="ad-btn" type="submit">Save profile</button>
+        </div>
+      </form>
+
+      <div class="ac-section">
+        <div class="ac-section__head">
+          <h3>Change your password</h3>
+          <p>At least 10 characters.</p>
+        </div>
+        <form method="post" action="{{ url_for('admin.account') }}">
+          <input type="hidden" name="action" value="password" />
+          <div class="ad-card__body">
+            <div class="ad-field">
+              <label for="acc-current">Current password</label>
+              <div class="ad-pwwrap">
+                <input class="ad-input" id="acc-current" name="current_password"
+                       type="password" autocomplete="current-password" required />
+                <button class="ad-pweye" type="button" data-toggle-pw="acc-current"
+                        aria-label="Show password" aria-pressed="false">
+                  <svg data-pw-icon="show" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg data-pw-icon="hide" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                    <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                    <path d="M6.7 6.7C4.2 8.3 2 12 2 12s3.5 7 10 7c1.6 0 3-.3 4.3-.8" />
+                    <path d="M19.5 16.1C21 14.7 22 12 22 12s-3.5-7-10-7c-.7 0-1.3 0-1.9.1" />
+                    <path d="m2 2 20 20" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="ad-grid2">
+              <div class="ad-field">
+                <label for="acc-new">New password</label>
+                <input class="ad-input" id="acc-new" name="new_password" type="password"
+                       autocomplete="new-password" minlength="10" required />
+              </div>
+              <div class="ad-field">
+                <label for="acc-confirm">Confirm new password</label>
+                <input class="ad-input" id="acc-confirm" name="confirm_password" type="password"
+                       autocomplete="new-password" minlength="10" required />
+              </div>
+            </div>
+          </div>
+          <div class="ad-card__foot">
+            <button class="ad-btn" type="submit">Update password</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <!-- ---------- Identity rail ---------- -->
+  <aside class="ac-rail">
+    <section class="ad-card">
+      <div class="ad-card__head"><h2>Signed in</h2></div>
+      <div class="ad-card__body">
+        <div class="ac-you">
+          <span class="ac-you__avatar" aria-hidden="true">
+            {{ (g.user['display_name'] or g.user['username'])[:2] | upper }}
+          </span>
+          <div class="ac-you__text">
+            <strong>{{ g.user['username'] }}</strong>
+            <span class="ad-pill {{ 'ad-pill--source' if is_developer else 'ad-pill--published' }}">
+              {{ g.user['role'] | capitalize }}
+            </span>
+          </div>
+        </div>
+
+        <dl class="ac-facts">
+          <div><dt>Account created</dt><dd>{{ g.user['created_at'] | pretty_date }}</dd></div>
+          <div><dt>Last sign-in</dt><dd>{{ g.user['last_login_at'] | pretty_date(true) }}</dd></div>
+        </dl>
+
+        <p class="ac-rolenote">
+          {% if is_developer %}
+          The developer account manages the client login as well as its own.
+          {% else %}
+          Your account covers leads and blog posts.
+          {% endif %}
+        </p>
+
+        <form method="post" action="{{ url_for('admin.logout') }}">
+          <button class="ad-btn ad-btn--ghost ad-btn--block" type="submit">Sign out</button>
+        </form>
+      </div>
+    </section>
+  </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin-account.js') }}" defer></script>
+{% endblock %}

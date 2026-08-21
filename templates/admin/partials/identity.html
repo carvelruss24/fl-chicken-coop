@@ -1,0 +1,15 @@
+{# Signed-in identity: name + the agency wordmark (or initials if the logo
+   asset is absent). Shared by the standard topbar and the editor's action bar. #}
+{% if g.user %}
+<span class="ad-who">
+  <strong>{{ g.user['display_name'] or g.user['username'] }}</strong>
+  Signed in
+</span>
+{% if smash_logo %}
+<img class="ad-brandmark" src="{{ smash_logo }}" alt="Smash Interactive" />
+{% else %}
+<span class="ad-avatar" aria-hidden="true">
+  {{ (g.user['display_name'] or g.user['username'])[:2] | upper }}
+</span>
+{% endif %}
+{% endif %}

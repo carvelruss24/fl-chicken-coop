@@ -1,0 +1,62 @@
+{% extends "admin/base.html" %}
+{% set active_nav = 'leads' %}
+{% block title %}{{ lead['name'] }}{% endblock %}
+{% block heading %}Lead{% endblock %}
+
+{% block content %}
+<a class="ad-backlink" href="{{ url_for('admin.leads') }}">&larr; Back to leads</a>
+
+<section class="ad-card">
+  <div class="ad-card__head">
+    <h2>{{ lead['name'] }}</h2>
+    <div class="ad-actions">
+      <span class="ad-pill ad-pill--{{ lead['status'] }}">{{ lead['status'] | capitalize }}</span>
+      <span class="ad-pill ad-pill--source">{{ lead['source'] | source_label }}</span>
+    </div>
+  </div>
+
+  <div class="ad-card__body">
+    <dl class="ad-dl">
+      <dt>Email</dt>
+      <dd>{% if lead['email'] %}<a href="mailto:{{ lead['email'] }}">{{ lead['email'] }}</a>{% else %}—{% endif %}</dd>
+
+      <dt>Phone</dt>
+      <dd>{% if lead['phone'] %}<a href="tel:{{ lead['phone'] }}">{{ lead['phone'] }}</a>{% else %}—{% endif %}</dd>
+
+      <dt>Zip code</dt>
+      <dd>{{ lead['zip_code'] or '—' }}</dd>
+
+      <dt>Coop size</dt>
+      <dd>{{ lead['size'] or '—' }}</dd>
+
+      <dt>Notes</dt>
+      <dd>{{ lead['notes'] or '—' }}</dd>
+
+      <dt>Received</dt>
+      <dd>{{ lead['created_at'] | pretty_date(true) }}</dd>
+
+      <dt>Email notification</dt>
+      <dd>{{ 'Sent to the business inbox' if lead['emailed'] else 'Not sent (stored here only)' }}</dd>
+    </dl>
+  </div>
+
+  <div class="ad-card__foot">
+    <form method="post" action="{{ url_for('admin.lead_status', lead_id=lead['id']) }}"
+          class="ad-actions" style="flex:1 1 auto">
+      <input type="hidden" name="back" value="{{ url_for('admin.lead_detail', lead_id=lead['id']) }}" />
+      <label class="ad-sr" for="lead-status">Status</label>
+      <select class="ad-select" id="lead-status" name="status" style="max-width:200px">
+        {% for s in statuses %}
+        <option value="{{ s }}" {{ 'selected' if s == lead['status'] }}>{{ s | capitalize }}</option>
+        {% endfor %}
+      </select>
+      <button class="ad-btn" type="submit">Update status</button>
+    </form>
+
+    <form method="post" action="{{ url_for('admin.lead_delete', lead_id=lead['id']) }}"
+          data-confirm="Delete this lead permanently?">
+      <button class="ad-btn ad-btn--danger" type="submit">Delete lead</button>
+    </form>
+  </div>
+</section>
+{% endblock %}

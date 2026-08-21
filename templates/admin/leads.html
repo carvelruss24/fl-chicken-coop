@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+{% set active_nav = 'leads' %}
+{% block title %}Leads{% endblock %}
+
+{% block content %}
+<section class="ad-card">
+  <div class="ad-card__head">
+    <h2>Leads <span class="ad-dim" style="font-weight:500">({{ total }})</span></h2>
+  </div>
+
+  <div class="ad-toolbar">
+    <form method="get" action="{{ url_for('admin.leads') }}" role="search">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}" />{% endif %}
+      <label class="ad-sr" for="lead-q">Search leads</label>
+      <input class="ad-input" id="lead-q" type="search" name="q" value="{{ q }}"
+             placeholder="Search name, email, phone or zip" />
+      <button class="ad-btn ad-btn--ghost" type="submit">Search</button>
+    </form>
+
+    <nav class="ad-tabs" aria-label="Filter by status">
+      <a class="ad-tab {{ 'is-active' if not status }}"
+         href="{{ url_for('admin.leads', q=q or None) }}">All <span>{{ counts.values() | sum }}</span></a>
+      {% for s in statuses %}
+      <a class="ad-tab {{ 'is-active' if status == s }}"
+         href="{{ url_for('admin.leads', status=s, q=q or None) }}">
+        {{ s | capitalize }} <span>{{ counts.get(s, 0) }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if leads %}
+  <div class="ad-tablewrap">
+    <table class="ad-table">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col">Contact</th>
+          <th scope="col" class="ad-col-optional">Zip</th>
+          <th scope="col" class="ad-col-optional">Size</th>
+          <th scope="col">Source</th>
+          <th scope="col">Status</th>
+          <th scope="col">Received</th>
+          <th scope="col"><span class="ad-sr">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for lead in leads %}
+        <tr>
+          <td data-label="Name" class="ad-strong">
+            <a href="{{ url_for('admin.lead_detail', lead_id=lead['id']) }}">{{ lead['name'] }}</a>
+          </td>
+          <td data-label="Contact">
+            {# One wrapper so the email/phone stack survives the mobile card
+               layout, where the cell becomes a flex row. #}
+            <span class="ad-cell">
+              {% if lead['email'] %}<a href="mailto:{{ lead['email'] }}">{{ lead['email'] }}</a><br />{% endif %}
+              {% if lead['phone'] %}<a class="ad-dim" href="tel:{{ lead['phone'] }}">{{ lead['phone'] }}</a>{% endif %}
+              {% if not lead['email'] and not lead['phone'] %}<span class="ad-dim">—</span>{% endif %}
+            </span>
+          </td>
+          <td data-label="Zip" class="ad-dim ad-col-optional">{{ lead['zip_code'] or '—' }}</td>
+          <td data-label="Size" class="ad-dim ad-col-optional">{{ lead['size'] or '—' }}</td>
+          <td data-label="Source"><span class="ad-pill ad-pill--source">{{ lead['source'] | source_label }}</span></td>
+          <td data-label="Status"><span class="ad-pill ad-pill--{{ lead['status'] }}">{{ lead['status'] | capitalize }}</span></td>
+          <td data-label="Received" class="ad-dim">{{ lead['created_at'] | pretty_date }}</td>
+          <td data-label="" class="ad-right">
+            <div class="ad-actions">
+              <a class="ad-btn ad-btn--ghost ad-btn--sm"
+                 href="{{ url_for('admin.lead_detail', lead_id=lead['id']) }}">View</a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if pages > 1 %}
+  <div class="ad-card__foot">
+    <span class="ad-pagination__info">Page {{ page }} of {{ pages }}</span>
+    <div class="ad-pagination">
+      {% if page > 1 %}
+      <a class="ad-btn ad-btn--ghost ad-btn--sm"
+         href="{{ url_for('admin.leads', page=page - 1, status=status or None, q=q or None) }}">Previous</a>
+      {% endif %}
+      {% if page < pages %}
+      <a class="ad-btn ad-btn--ghost ad-btn--sm"
+         href="{{ url_for('admin.leads', page=page + 1, status=status or None, q=q or None) }}">Next</a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% else %}
+  <div class="ad-empty">
+    <strong>Nothing to show</strong>
+    {% if q or status %}No leads match this filter.{% else %}Contact-form submissions will appear here.{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

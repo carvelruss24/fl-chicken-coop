@@ -1,0 +1,876 @@
+/* ==========================================================================
+   admin.css — Florida Chicken Coops dashboard
+   Standalone stylesheet: the dashboard does NOT load the marketing site's
+   style.css, so nothing here can leak into (or be broken by) the public pages.
+
+   Responsive model
+     >= 1024px  fixed sidebar, content offset by --sidebar-w
+     <  1024px  sidebar becomes an off-canvas drawer + scrim, topbar shows the
+                hamburger
+     <  640px   every table collapses into stacked cards via data-label, and
+                filter/toolbar rows wrap to full width
+   ========================================================================== */
+
+:root {
+  --sidebar-w: 260px;
+
+  /* Brand: dark brown chrome, gold accents (matches the marketing site). */
+  --ad-sidebar: #2c2416;
+  --ad-sidebar-hover: #3a3122;
+  --ad-accent: #c5a06a;
+  --ad-accent-dark: #ab8752;
+  --ad-accent-ink: #2c2416;
+
+  --ad-bg: #f4f5f7;
+  --ad-surface: #ffffff;
+  --ad-text: #14181f;
+  --ad-muted: #667085;
+  --ad-border: #e4e7ec;
+  --ad-border-soft: #eef0f3;
+
+  --ad-green: #067647;
+  --ad-green-bg: #ecfdf3;
+  --ad-blue: #175cd3;
+  --ad-blue-bg: #eff6ff;
+  --ad-violet: #5925dc;
+  --ad-violet-bg: #f4f3ff;
+  --ad-amber: #b54708;
+  --ad-amber-bg: #fffaeb;
+  --ad-red: #b42318;
+  --ad-red-bg: #fef3f2;
+  --ad-slate: #475467;
+  --ad-slate-bg: #f2f4f7;
+
+  --ad-radius: 12px;
+  --ad-radius-sm: 8px;
+  --ad-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .1);
+  --ad-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+.ad-body {
+  margin: 0;
+  font-family: var(--ad-font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ad-text);
+  background: var(--ad-bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+.ad-body a { color: inherit; text-decoration: none; }
+.ad-body img { max-width: 100%; height: auto; display: block; }
+.ad-body h1, .ad-body h2, .ad-body h3, .ad-body p { margin: 0; }
+
+/* `hidden` must always win. Any rule that sets `display` on an element we
+   toggle with el.hidden = true would otherwise outrank the UA stylesheet's
+   [hidden] { display: none } and leave the element on screen. */
+[hidden] { display: none !important; }
+
+/* Visually hidden but readable by screen readers. */
+.ad-sr {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.ad-skip {
+  position: absolute; left: -9999px; top: 0; z-index: 100;
+  background: var(--ad-accent); color: var(--ad-accent-ink);
+  padding: .625rem 1rem; border-radius: 0 0 var(--ad-radius-sm) 0; font-weight: 600;
+}
+.ad-skip:focus { left: 0; }
+
+/* --------------------------------------------------------------------------
+   Shell
+   -------------------------------------------------------------------------- */
+.ad-shell { min-height: 100vh; }
+
+/* --- Sidebar --- */
+.ad-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  background: var(--ad-sidebar);
+  color: #e9e4da;
+  z-index: 60;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.ad-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  padding: 1.25rem 1.25rem 1rem;
+}
+.ad-sidebar__brand img { width: 100%; max-width: 190px; }
+
+.ad-sidebar__nav { padding: .5rem .75rem; }
+.ad-sidebar__nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+
+.ad-navlink {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .7rem .875rem;
+  border-radius: var(--ad-radius-sm);
+  font-weight: 600;
+  font-size: .9375rem;
+  color: #d7d0c4;
+  transition: background .18s ease, color .18s ease;
+}
+.ad-navlink:hover { background: var(--ad-sidebar-hover); color: #fff; }
+.ad-navlink.is-active { background: var(--ad-accent); color: var(--ad-accent-ink); }
+.ad-navlink svg { width: 20px; height: 20px; flex: none; }
+
+/* Bottom block (View site / Sign out) pinned below the nav. */
+.ad-sidebar__foot {
+  margin-top: auto;
+  padding: .75rem;
+  border-top: 1px solid rgba(255, 255, 255, .1);
+  display: grid;
+  gap: 4px;
+}
+.ad-sidebar__foot .ad-navlink { color: #b7afa1; font-weight: 500; }
+
+.ad-sidebar__close {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: 0;
+  color: #d7d0c4;
+  font-size: 1.75rem;
+  line-height: 1;
+  padding: .25rem .5rem;
+  cursor: pointer;
+  border-radius: var(--ad-radius-sm);
+}
+.ad-sidebar__close:hover { background: var(--ad-sidebar-hover); color: #fff; }
+
+/* --- Main column --- */
+.ad-main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ad-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 68px;
+  padding: .875rem clamp(1rem, 3vw, 2rem);
+  background: var(--ad-surface);
+  border-bottom: 1px solid var(--ad-border);
+}
+.ad-topbar__title { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; }
+.ad-topbar__right { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
+
+.ad-avatar {
+  width: 36px; height: 36px; flex: none;
+  border-radius: 50%;
+  background: var(--ad-accent);
+  color: var(--ad-accent-ink);
+  display: grid; place-items: center;
+  font-weight: 700; font-size: .8125rem;
+}
+.ad-who { font-size: .875rem; color: var(--ad-muted); }
+.ad-who strong { display: block; color: var(--ad-text); font-size: .9375rem; }
+
+/* Agency wordmark, shown instead of the initials badge when the asset exists.
+   Selector is .ad-topbar-scoped so it outranks the `.ad-body img { height:auto }`
+   reset. Sized by height with auto width because the mark is a stacked
+   three-line lockup, not a square glyph. */
+.ad-topbar .ad-brandmark {
+  /* 40px is the topbar's full inner height (68px bar - 2x14px padding). A
+     three-line stacked lockup needs every pixel of it to stay legible; a
+     single-line horizontal version of the logo would read better here. */
+  height: 40px;
+  width: auto;
+  max-width: 140px;
+  object-fit: contain;
+  flex: none;
+}
+
+.ad-burger {
+  display: none;
+  width: 42px; height: 42px;
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius-sm);
+  background: var(--ad-surface);
+  cursor: pointer;
+  padding: 0;
+  place-items: center;
+}
+.ad-burger span,
+.ad-burger span::before,
+.ad-burger span::after {
+  display: block; width: 18px; height: 2px; border-radius: 2px;
+  background: var(--ad-text); content: "";
+}
+.ad-burger span { position: relative; }
+.ad-burger span::before { position: absolute; top: -6px; }
+.ad-burger span::after { position: absolute; top: 6px; }
+
+.ad-content {
+  flex: 1;
+  padding: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  max-width: 1600px;
+}
+
+/* Scrim behind the mobile drawer. */
+.ad-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 24, 31, .5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .22s ease, visibility .22s ease;
+  z-index: 50;
+}
+
+/* --------------------------------------------------------------------------
+   Cards, stats
+   -------------------------------------------------------------------------- */
+.ad-card {
+  background: var(--ad-surface);
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius);
+  box-shadow: var(--ad-shadow);
+}
+.ad-card + .ad-card { margin-top: clamp(1rem, 2.5vw, 1.5rem); }
+
+.ad-card__head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.125rem 1.25rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+}
+.ad-card__head h2 { font-size: 1.0625rem; font-weight: 700; }
+.ad-card__head .ad-btn, .ad-card__head .ad-actions { margin-left: auto; }
+.ad-card__body { padding: 1.25rem; }
+.ad-card__foot {
+  padding: .875rem 1.25rem;
+  border-top: 1px solid var(--ad-border-soft);
+  display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+
+.ad-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: clamp(.875rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+.ad-stat {
+  background: var(--ad-surface);
+  border: 1px solid var(--ad-border);
+  border-radius: var(--ad-radius);
+  box-shadow: var(--ad-shadow);
+  padding: 1.375rem 1.5rem;
+}
+.ad-stat__value {
+  font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.02em;
+}
+.ad-stat__label { color: var(--ad-muted); font-size: .9375rem; margin-top: .25rem; }
+
+/* --------------------------------------------------------------------------
+   Tables (desktop) -> cards (mobile)
+   -------------------------------------------------------------------------- */
+.ad-tablewrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  /* `contain: paint` is what actually keeps a wide table from adding scrollable
+     overflow to the page itself — overflow-x alone clips the paint but the root
+     still grows, so the whole dashboard would slide sideways on tablet widths.
+     The table continues to scroll inside this wrapper. */
+  contain: paint;
+}
+
+.ad-table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+.ad-table th {
+  text-align: left;
+  font-size: .75rem;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ad-muted);
+  font-weight: 600;
+  padding: .75rem 1.25rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+  white-space: nowrap;
+}
+.ad-table td {
+  padding: .9375rem 1.25rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+  vertical-align: middle;
+}
+.ad-table tbody tr:last-child td { border-bottom: 0; }
+.ad-table tbody tr:hover { background: #fafbfc; }
+.ad-table .ad-strong { font-weight: 700; }
+.ad-table .ad-strong a:hover { color: var(--ad-accent-dark); text-decoration: underline; }
+.ad-table .ad-dim { color: var(--ad-muted); white-space: nowrap; }
+.ad-table .ad-nowrap { white-space: nowrap; }
+.ad-table .ad-right { text-align: right; }
+
+.ad-empty { padding: 3rem 1.25rem; text-align: center; color: var(--ad-muted); }
+.ad-empty strong { display: block; color: var(--ad-text); margin-bottom: .25rem; }
+
+/* --- Pills --- */
+.ad-pill {
+  display: inline-block;
+  padding: .1875rem .5rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  background: var(--ad-slate-bg);
+  color: var(--ad-slate);
+}
+.ad-pill--new       { background: var(--ad-blue-bg);   color: var(--ad-blue); }
+.ad-pill--contacted { background: var(--ad-amber-bg);  color: var(--ad-amber); }
+.ad-pill--quoted    { background: var(--ad-violet-bg); color: var(--ad-violet); }
+.ad-pill--won       { background: var(--ad-green-bg);  color: var(--ad-green); }
+.ad-pill--lost      { background: var(--ad-red-bg);    color: var(--ad-red); }
+.ad-pill--published { background: var(--ad-green-bg);  color: var(--ad-green); }
+.ad-pill--draft     { background: var(--ad-slate-bg);  color: var(--ad-slate); }
+.ad-pill--source    { background: var(--ad-violet-bg); color: var(--ad-violet); }
+
+/* --------------------------------------------------------------------------
+   Buttons, forms
+   -------------------------------------------------------------------------- */
+.ad-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  padding: .625rem 1rem;
+  border-radius: var(--ad-radius-sm);
+  border: 1px solid transparent;
+  background: var(--ad-accent);
+  color: var(--ad-accent-ink);
+  font: inherit;
+  font-size: .9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.ad-btn:hover { background: var(--ad-accent-dark); color: #fff; }
+.ad-btn--ghost {
+  background: var(--ad-surface);
+  border-color: var(--ad-border);
+  color: var(--ad-text);
+}
+.ad-btn--ghost:hover { background: #f9fafb; border-color: #d0d5dd; color: var(--ad-text); }
+.ad-btn--danger { background: var(--ad-surface); border-color: #fda29b; color: var(--ad-red); }
+.ad-btn--danger:hover { background: var(--ad-red-bg); color: var(--ad-red); }
+.ad-btn--sm { padding: .4375rem .6875rem; font-size: .8125rem; }
+.ad-btn--block { width: 100%; }
+.ad-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.ad-actions { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+
+.ad-field { display: grid; gap: .375rem; margin-bottom: 1.125rem; }
+.ad-field > label { font-size: .875rem; font-weight: 600; }
+.ad-field__hint { font-size: .8125rem; color: var(--ad-muted); }
+
+.ad-input, .ad-select, .ad-textarea {
+  width: 100%;
+  padding: .625rem .75rem;
+  font: inherit;
+  font-size: .9375rem;
+  color: var(--ad-text);
+  background: var(--ad-surface);
+  border: 1px solid #d0d5dd;
+  border-radius: var(--ad-radius-sm);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+  /* 16px on touch keyboards stops iOS Safari from zooming the viewport. */
+}
+.ad-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
+.ad-textarea--tall { min-height: 340px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .875rem; }
+.ad-input:focus, .ad-select:focus, .ad-textarea:focus {
+  outline: 0;
+  border-color: var(--ad-accent);
+  box-shadow: 0 0 0 3px rgba(197, 160, 106, .28);
+}
+.ad-input:disabled, .ad-select:disabled, .ad-textarea:disabled {
+  background: var(--ad-slate-bg);
+  color: var(--ad-muted);
+  cursor: not-allowed;
+}
+
+/* Password field with an eye toggle sitting inside its right edge. */
+.ad-pwwrap { position: relative; }
+.ad-pwwrap .ad-input { padding-right: 3rem; }
+
+.ad-pweye {
+  position: absolute;
+  right: .3125rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ad-muted);
+  cursor: pointer;
+  transition: color .18s ease, background .18s ease;
+}
+.ad-pweye:hover { color: var(--ad-text); background: var(--ad-slate-bg); }
+.ad-pweye svg { width: 18px; height: 18px; display: block; }
+
+.ad-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23667085' stroke-width='2.5' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right .65rem center;
+  padding-right: 2.25rem;
+}
+
+.ad-grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 1.25rem; }
+/* Each field packs to the top of the row. Without this, a field carrying a hint
+   makes the row taller and its hint-less neighbour stretches, pushing that
+   input visibly out of line with the one beside it. */
+.ad-grid2 > .ad-field { align-content: start; }
+
+/* Editor: body column + settings sidebar, stacking on narrow screens. */
+.ad-editor { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: clamp(1rem, 2.5vw, 1.5rem); align-items: start; }
+
+/* --- Toolbar (search + filters) --- */
+.ad-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+}
+.ad-toolbar form { display: flex; gap: .5rem; flex: 1 1 260px; min-width: 0; }
+.ad-toolbar .ad-input { flex: 1 1 auto; min-width: 0; }
+
+.ad-tabs { display: flex; gap: .375rem; flex-wrap: wrap; }
+.ad-tab {
+  padding: .4375rem .75rem;
+  border-radius: 999px;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--ad-muted);
+  border: 1px solid var(--ad-border);
+  background: var(--ad-surface);
+  white-space: nowrap;
+}
+.ad-tab:hover { background: #f9fafb; color: var(--ad-text); }
+.ad-tab.is-active { background: var(--ad-sidebar); border-color: var(--ad-sidebar); color: #fff; }
+.ad-tab span { opacity: .7; }
+
+/* --- Flash messages --- */
+.ad-flashes { display: grid; gap: .625rem; margin-bottom: 1.25rem; }
+.ad-flash {
+  padding: .8125rem 1rem;
+  border-radius: var(--ad-radius-sm);
+  border: 1px solid var(--ad-border);
+  background: var(--ad-surface);
+  font-size: .9375rem;
+  font-weight: 500;
+}
+.ad-flash--success { background: var(--ad-green-bg); border-color: #abefc6; color: #085d3a; }
+.ad-flash--error { background: var(--ad-red-bg); border-color: #fecdca; color: #912018; }
+
+/* --------------------------------------------------------------------------
+   Account settings
+   One grid for the page (main + identity rail) so every card shares the same
+   edges, and cards group related settings into sections instead of stacking a
+   separate card per control.
+   -------------------------------------------------------------------------- */
+.ac-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  align-items: start;
+}
+.ac-main { display: grid; gap: clamp(1rem, 2vw, 1.5rem); min-width: 0; }
+.ac-main > .ad-card + .ad-card { margin-top: 0; }   /* the grid gap spaces these */
+.ac-rail { position: sticky; top: calc(68px + 1rem); min-width: 0; }
+
+/* A section inside a card: its own sub-heading, divided by a rule. */
+.ac-section { border-top: 1px solid var(--ad-border-soft); }
+.ac-section__head { padding: 1.125rem 1.25rem 0; }
+.ac-section__head h3 { font-size: .9375rem; font-weight: 700; margin: 0; }
+.ac-section__head p { font-size: .8125rem; color: var(--ad-muted); margin: .25rem 0 0; }
+
+/* The primary call to action when no client account exists. */
+.ac-cta { border-color: var(--ad-accent); }
+.ac-cta__lead { font-size: 1rem; color: var(--ad-text); }
+
+.ac-points {
+  list-style: none;
+  margin: .875rem 0 1.25rem;
+  padding: 0;
+  display: grid;
+  gap: .375rem;
+}
+.ac-points li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: .9375rem;
+  color: var(--ad-muted);
+}
+.ac-points li::before {
+  content: "";
+  position: absolute;
+  left: .375rem;
+  top: .5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ad-accent);
+}
+
+.ad-btn--lg { padding: .8125rem 1.25rem; font-size: 1rem; }
+
+.ac-createform { border-top: 1px solid var(--ad-border-soft); }
+
+/* Password + its Generate/Copy/Show buttons on one row. */
+.ac-pw { display: flex; gap: .5rem; align-items: stretch; }
+.ac-pw .ad-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.ac-pw .ad-btn { flex: none; }
+
+/* Danger zone: tinted, and the action sits beside its explanation rather than
+   in a card of its own. */
+.ac-danger { background: var(--ad-red-bg); border-radius: 0 0 var(--ad-radius) var(--ad-radius); }
+.ac-danger__inner {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 1.125rem 1.25rem;
+}
+.ac-danger__inner > div { flex: 1 1 260px; min-width: 0; }
+.ac-danger h3 { font-size: .9375rem; font-weight: 700; margin: 0; color: #912018; }
+.ac-danger p { font-size: .8125rem; color: #a13c31; margin: .25rem 0 0; }
+.ac-danger .ad-btn--danger { background: var(--ad-surface); }
+
+/* Footer meta beside a save button ("Created … · last signed in …"). */
+.ac-meta { font-size: .8125rem; color: var(--ad-muted); }
+
+/* A field hint that has turned into a warning (e.g. renaming a login). */
+.ac-hint--warn { color: var(--ad-amber); font-weight: 600; }
+
+/* One-time credential handover. */
+.ac-handover { border-color: var(--ad-accent); }
+.ac-note { color: var(--ad-muted); font-size: .875rem; margin-bottom: 1rem; }
+
+.ac-creds {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: .5rem 1rem;
+  margin: 0 0 1.125rem;
+  align-items: center;
+}
+.ac-creds dt { font-size: .875rem; font-weight: 600; color: var(--ad-muted); }
+.ac-creds dd { margin: 0; min-width: 0; }
+.ac-creds code {
+  display: inline-block;
+  padding: .3125rem .625rem;
+  border-radius: 6px;
+  background: var(--ad-slate-bg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: .9375rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Identity rail. */
+.ac-you { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.125rem; }
+.ac-you__avatar {
+  width: 42px;
+  height: 42px;
+  flex: none;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--ad-sidebar);
+  color: #fff;
+  font-size: .875rem;
+  font-weight: 700;
+}
+.ac-you__text { display: grid; gap: .25rem; justify-items: start; min-width: 0; }
+.ac-you__text strong { font-size: .9375rem; overflow-wrap: anywhere; }
+
+/* Label/value pairs that stay readable at any width (no ragged 2-col grid). */
+.ac-facts { margin: 0; display: grid; gap: .625rem; }
+.ac-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: .75rem;
+  align-items: baseline;
+  padding-bottom: .625rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+}
+.ac-facts > div:last-child { border-bottom: 0; padding-bottom: 0; }
+.ac-facts dt { font-size: .8125rem; color: var(--ad-muted); flex: none; }
+.ac-facts dd { margin: 0; font-size: .875rem; font-weight: 600; text-align: right; }
+
+.ac-rolenote {
+  font-size: .8125rem;
+  color: var(--ad-muted);
+  margin: 1rem 0 1.125rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ad-border-soft);
+}
+
+@media (max-width: 1199px) {
+  .ac-layout { grid-template-columns: minmax(0, 1fr); }
+  .ac-rail { position: static; }
+}
+
+@media (max-width: 639px) {
+  .ac-cta .ad-btn--lg { width: 100%; }
+  .ac-pw { flex-wrap: wrap; }
+  .ac-pw .ad-input { flex: 1 1 100%; }
+  .ac-pw .ad-btn { flex: 1 1 auto; }
+  .ac-creds { grid-template-columns: minmax(0, 1fr); gap: .25rem; }
+  .ac-creds dt:not(:first-child) { margin-top: .75rem; }
+  .ac-section__head, .ac-danger__inner { padding-left: 1rem; padding-right: 1rem; }
+  .ac-danger__inner .ad-btn { width: 100%; }
+  .ac-meta { width: 100%; }
+}
+
+/* --- Definition list (lead detail) --- */
+.ad-dl { display: grid; grid-template-columns: 170px minmax(0, 1fr); gap: 0; }
+.ad-dl dt {
+  font-size: .875rem; font-weight: 600; color: var(--ad-muted);
+  padding: .8125rem 0; border-bottom: 1px solid var(--ad-border-soft);
+}
+.ad-dl dd {
+  margin: 0; padding: .8125rem 0; border-bottom: 1px solid var(--ad-border-soft);
+  overflow-wrap: anywhere;
+}
+.ad-dl > :nth-last-child(-n+2) { border-bottom: 0; }
+
+.ad-pagination { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+.ad-pagination__info { color: var(--ad-muted); font-size: .875rem; }
+
+.ad-backlink {
+  display: inline-flex; align-items: center; gap: .375rem;
+  color: var(--ad-muted); font-size: .875rem; font-weight: 600;
+  margin-bottom: 1rem;
+}
+.ad-backlink:hover { color: var(--ad-text); }
+
+/* --------------------------------------------------------------------------
+   Login screen
+   -------------------------------------------------------------------------- */
+.ad-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 5vw, 3rem);
+  background:
+    radial-gradient(1100px 520px at 50% -12%, #3a3122 0%, transparent 70%),
+    var(--ad-sidebar);
+}
+.ad-login__card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--ad-surface);
+  border-radius: 16px;
+  padding: clamp(1.5rem, 5vw, 2.25rem);
+  box-shadow: 0 24px 48px -12px rgba(16, 24, 40, .45);
+}
+.ad-login__logo { display: block; margin: 0 auto 1.25rem; max-width: 220px; }
+.ad-login__card h1 { font-size: 1.375rem; font-weight: 700; text-align: center; }
+.ad-login__sub { text-align: center; color: var(--ad-muted); font-size: .9375rem; margin: .375rem 0 1.5rem; }
+.ad-login__back { display: block; text-align: center; margin-top: 1.25rem; font-size: .875rem; color: var(--ad-muted); }
+.ad-login__back:hover { color: var(--ad-text); }
+
+.ad-note {
+  margin-top: 1.25rem;
+  padding: .8125rem 1rem;
+  border-radius: var(--ad-radius-sm);
+  background: #fbf8f2;
+  border: 1px dashed var(--ad-accent);
+  font-size: .8125rem;
+  color: #6b5a3a;
+}
+.ad-note code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+
+/* Tablet & below: sidebar becomes an off-canvas drawer. */
+@media (max-width: 1023px) {
+  .ad-sidebar {
+    transform: translateX(-100%);
+    transition: transform .24s ease;
+    box-shadow: 0 0 40px rgba(0, 0, 0, .3);
+    width: min(84vw, var(--sidebar-w));
+  }
+  .ad-main { margin-left: 0; }
+  .ad-burger { display: grid; }
+  .ad-sidebar__close { display: block; }
+
+  .ad-shell.is-open .ad-sidebar { transform: translateX(0); }
+  .ad-shell.is-open .ad-scrim { opacity: 1; visibility: visible; }
+  /* Freeze the page behind the open drawer. */
+  .ad-body.ad-body--locked { overflow: hidden; }
+
+  .ad-editor { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767px) {
+  .ad-topbar { min-height: 60px; padding: .75rem 1rem; }
+  .ad-topbar__title { font-size: 1.125rem; }
+  /* Keep the avatar/wordmark, drop the name/role text. */
+  .ad-who { display: none; }
+  .ad-topbar .ad-brandmark { height: 32px; max-width: 112px; }
+  .ad-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; }
+  .ad-stat { padding: 1rem 1.125rem; }
+  .ad-card__head, .ad-toolbar, .ad-card__body, .ad-card__foot { padding-left: 1rem; padding-right: 1rem; }
+  .ad-dl { grid-template-columns: minmax(0, 1fr); }
+  .ad-dl dt { padding-bottom: 0; border-bottom: 0; }
+  .ad-dl dd { padding-top: .125rem; }
+  .ad-dl > :nth-last-child(-n+2) { border-bottom: 0; }
+  .ad-dl dt + dd { border-bottom: 1px solid var(--ad-border-soft); }
+}
+
+/* Phones & small tablets: tables reflow into stacked cards via data-label. */
+@media (max-width: 767px) {
+  /* No width:100% on the rows/cells — a block box already fills its parent,
+     and an explicit 100% would be measured *before* the row's own margins,
+     pushing every card past the card edge. */
+  .ad-table, .ad-table tbody, .ad-table tr, .ad-table td { display: block; }
+  .ad-table { width: 100%; }
+  .ad-table thead { display: none; }
+  .ad-table tr {
+    border: 1px solid var(--ad-border);
+    border-radius: var(--ad-radius-sm);
+    padding: .25rem .875rem .5rem;
+    margin: 0 1rem .75rem;
+    overflow: hidden;
+  }
+  .ad-table tbody tr:hover { background: var(--ad-surface); }
+  .ad-table td {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .75rem;
+    padding: .5rem 0;
+    border-bottom: 1px solid var(--ad-border-soft);
+    text-align: right;
+    /* Long emails and URLs must break rather than push the card wider. */
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+  .ad-table td:last-child { border-bottom: 0; }
+
+  /* The primary cell becomes the card's heading: no label, full width, left. */
+  .ad-table td.ad-strong {
+    display: block;
+    text-align: left;
+    font-size: 1.0625rem;
+    line-height: 1.35;
+    padding: .75rem 0 .625rem;
+  }
+  .ad-table td.ad-strong::before { content: none; }
+  .ad-table td::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: .6875rem;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--ad-muted);
+    text-align: left;
+  }
+  /* Rows with no label (action cells) get the full width. */
+  .ad-table td[data-label=""]::before { content: none; }
+  .ad-table td .ad-cell { display: block; min-width: 0; }
+  .ad-table td .ad-actions { justify-content: flex-end; }
+  .ad-table .ad-dim { white-space: normal; }
+
+  .ad-tablewrap { overflow-x: visible; }
+  .ad-card__head { flex-direction: column; align-items: stretch; }
+  .ad-card__head .ad-btn, .ad-card__head .ad-actions { margin-left: 0; }
+  .ad-card__head .ad-btn { width: 100%; }
+  /* Pills are labels: keep them hugging their text instead of stretching. */
+  .ad-card__head > .ad-pill { align-self: flex-start; }
+  .ad-toolbar { flex-direction: column; align-items: stretch; }
+  /* Stacked children must not inherit their min-content width, or the search
+     row and the filter pills push the whole page sideways. */
+  .ad-toolbar > * { width: 100%; min-width: 0; }
+  .ad-toolbar form { flex: 1 1 auto; }
+  .ad-tabs {
+    overflow-x: auto;
+    padding-bottom: .25rem;
+    flex-wrap: nowrap;
+    scrollbar-width: thin;
+  }
+  .ad-tabs > * { flex: none; }
+  .ad-pagination { margin-left: 0; width: 100%; justify-content: space-between; }
+  .ad-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* Mid widths: a real table, but a lean one. Between the card layout and a
+   full-width desktop the content column is narrow (the 260px sidebar comes
+   back at 1024px), so drop the lowest-priority columns, tighten the cell
+   padding, and let headers and long emails wrap instead of forcing the user
+   to discover a horizontal scroll. Every hidden value is still on the lead
+   detail page. */
+@media (min-width: 768px) and (max-width: 1439px) {
+  .ad-table .ad-col-optional { display: none; }
+  .ad-table th,
+  .ad-table td { padding-left: .75rem; padding-right: .75rem; }
+  .ad-table th { white-space: normal; }
+  .ad-table td { overflow-wrap: anywhere; }
+}
+
+@media (max-width: 380px) {
+  .ad-stats { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Touch keyboards zoom inputs under 16px, so bump them on small screens. */
+@media (max-width: 767px) {
+  .ad-input, .ad-select, .ad-textarea { font-size: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+
+/* Focus ring for keyboard users everywhere in the dashboard. */
+.ad-body :focus-visible {
+  outline: 2px solid var(--ad-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media print {
+  .ad-sidebar, .ad-topbar, .ad-scrim, .ad-actions { display: none !important; }
+  .ad-main { margin-left: 0; }
+  .ad-body { background: #fff; }
+}

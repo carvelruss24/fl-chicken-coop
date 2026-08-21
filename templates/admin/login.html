@@ -1,0 +1,78 @@
+{# Sign-in page. Standalone (no dashboard chrome) so an anonymous visitor never
+   sees the nav. #}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sign in — Florida Chicken Coops</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
+</head>
+
+<body class="ad-body">
+  <main class="ad-login">
+    <div class="ad-login__card">
+      {# The logo carries the branding; the heading stays for screen readers and
+         document structure without repeating it on screen. #}
+      <h1 class="ad-sr">Sign in</h1>
+      <img class="ad-login__logo" src="{{ url_for('static', filename='img/logo.svg') }}"
+           alt="Florida Chicken Coops" width="220" height="91" />
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      <div class="ad-flashes">
+        {% for category, message in messages %}
+        <p class="ad-flash ad-flash--{{ category }}">{{ message }}</p>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+
+      {% if error %}
+      <div class="ad-flashes">
+        <p class="ad-flash ad-flash--error">{{ error }}</p>
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('admin.login', next=request.args.get('next')) }}">
+        <div class="ad-field">
+          <label for="username">Username</label>
+          <input class="ad-input" id="username" name="username" value="{{ username }}"
+                 autocomplete="username" autocapitalize="none" spellcheck="false"
+                 required autofocus />
+        </div>
+        <div class="ad-field">
+          <label for="password">Password</label>
+          <div class="ad-pwwrap">
+            <input class="ad-input" id="password" name="password" type="password"
+                   autocomplete="current-password" required />
+            <button class="ad-pweye" type="button" data-toggle-pw="password"
+                    aria-label="Show password" aria-pressed="false">
+              <svg data-pw-icon="show" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg data-pw-icon="hide" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+                <path d="M6.7 6.7C4.2 8.3 2 12 2 12s3.5 7 10 7c1.6 0 3-.3 4.3-.8" />
+                <path d="M19.5 16.1C21 14.7 22 12 22 12s-3.5-7-10-7c-.7 0-1.3 0-1.9.1" />
+                <path d="m2 2 20 20" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <button class="ad-btn ad-btn--block" type="submit">Sign in</button>
+      </form>
+
+      <a class="ad-login__back" href="{{ url_for('index') }}">&larr; Back to the website</a>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/password-toggle.js') }}" defer></script>
+</body>
+
+</html>

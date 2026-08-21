@@ -1,0 +1,85 @@
+{% extends "admin/base.html" %}
+{% set active_nav = 'posts' %}
+{% block title %}Blog Posts{% endblock %}
+
+{% block content %}
+<section class="ad-card">
+  <div class="ad-card__head">
+    <h2>Blog posts <span class="ad-dim" style="font-weight:500">({{ total }})</span></h2>
+    <a class="ad-btn" href="{{ url_for('admin.post_new') }}">New post</a>
+  </div>
+
+  <div class="ad-toolbar">
+    <form method="get" action="{{ url_for('admin.posts') }}" role="search">
+      {% if status %}<input type="hidden" name="status" value="{{ status }}" />{% endif %}
+      <label class="ad-sr" for="post-q">Search posts</label>
+      <input class="ad-input" id="post-q" type="search" name="q" value="{{ q }}"
+             placeholder="Search by title or excerpt" />
+      <button class="ad-btn ad-btn--ghost" type="submit">Search</button>
+    </form>
+
+    <nav class="ad-tabs" aria-label="Filter by status">
+      <a class="ad-tab {{ 'is-active' if not status }}"
+         href="{{ url_for('admin.posts', q=q or None) }}">All <span>{{ counts.values() | sum }}</span></a>
+      {% for s in statuses %}
+      <a class="ad-tab {{ 'is-active' if status == s }}"
+         href="{{ url_for('admin.posts', status=s, q=q or None) }}">
+        {{ s | capitalize }} <span>{{ counts.get(s, 0) }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+  </div>
+
+  {% if posts %}
+  <div class="ad-tablewrap">
+    <table class="ad-table">
+      <thead>
+        <tr>
+          <th scope="col">Title</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="ad-col-optional">Author</th>
+          <th scope="col">Updated</th>
+          <th scope="col"><span class="ad-sr">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr>
+          <td data-label="Title" class="ad-strong">
+            <a href="{{ url_for('admin.post_edit', post_id=post['id']) }}">{{ post['title'] }}</a>
+            {% if post['excerpt'] %}
+            <span class="ad-dim" style="display:block;font-weight:400;white-space:normal">
+              {{ post['excerpt'] | truncate(90) }}
+            </span>
+            {% endif %}
+          </td>
+          <td data-label="Status"><span class="ad-pill ad-pill--{{ post['status'] }}">{{ post['status'] }}</span></td>
+          <td data-label="Author" class="ad-dim ad-col-optional">{{ post['author'] or '—' }}</td>
+          <td data-label="Updated" class="ad-dim">{{ post['updated_at'] | pretty_date }}</td>
+          <td data-label="" class="ad-right">
+            <div class="ad-actions">
+              {% if post['status'] == 'published' %}
+              <a class="ad-btn ad-btn--ghost ad-btn--sm" target="_blank" rel="noopener"
+                 href="{{ url_for('blog_post', slug=post['slug']) }}">View</a>
+              {% endif %}
+              <a class="ad-btn ad-btn--ghost ad-btn--sm"
+                 href="{{ url_for('admin.post_edit', post_id=post['id']) }}">Edit</a>
+              <form method="post" action="{{ url_for('admin.post_delete', post_id=post['id']) }}"
+                    data-confirm="Delete “{{ post['title'] }}” permanently?">
+                <button class="ad-btn ad-btn--danger ad-btn--sm" type="submit">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="ad-empty">
+    <strong>No posts {{ 'match this filter' if q or status else 'yet' }}</strong>
+    {% if not q and not status %}Use “New post” to write the first one.{% endif %}
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

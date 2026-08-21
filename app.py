@@ -14,11 +14,15 @@ come online — no nav changes required.
 import os
 import html
 import logging
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 
 import requests
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, abort, render_template, request, redirect, url_for
 from dotenv import load_dotenv
+
+import db
+from admin import bp as admin_bp
 
 # Load Resend / recipient settings from a local .env file (never committed).
 load_dotenv()
@@ -26,6 +30,21 @@ load_dotenv()
 app = Flask(__name__)
 
 app.config.update(
+    # --- Sessions (the admin dashboard signs users in with a signed cookie) ---
+    # Set a long random FLASK_SECRET_KEY in .env for production: without it the
+    # fallback below changes on every restart, which logs everyone out.
+    SECRET_KEY=os.getenv("FLASK_SECRET_KEY") or os.urandom(32),
+    PERMANENT_SESSION_LIFETIME=timedelta(days=14),
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    # Sent over HTTPS only once you're behind TLS — enable via .env in prod.
+    SESSION_COOKIE_SECURE=os.getenv("SESSION_COOKIE_SECURE", "0").strip().lower()
+    in ("1", "true", "yes"),
+
+    # Largest request body we accept — the ceiling for a featured-image upload.
+    # Flask raises 413 past this, which the editor's dropzone reports inline.
+    MAX_CONTENT_LENGTH=int(os.getenv("MAX_UPLOAD_MB", "8")) * 1024 * 1024,
+
     # --- Resend (HTTPS email API that sends the notification — no SMTP) ---
     # send_contact_email() POSTs to Resend's REST API over HTTPS, which sidesteps
     # VPS port-25/SMTP blocks and gives inbox-grade deliverability (SPF/DKIM are
@@ -53,6 +72,11 @@ app.config.update(
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Create the SQLite schema (and seed the dashboard login) before serving, then
+# mount the /admin dashboard.
+db.init_db(app)
+app.register_blueprint(admin_bp)
 
 # Human-readable labels for the coop-size <select> values, used in the email.
 SIZE_LABELS = {
@@ -117,6 +141,38 @@ CONTACT = {
         "%20request%20a%20quote%20for%20a%20chicken%20coop."
     ),
 }
+
+
+# Block-level tags that mean "this body is already HTML" (TinyMCE output).
+_BLOCK_TAG_RE = re.compile(
+    r"<\s*(p|div|h[1-6]|ul|ol|li|blockquote|pre|table|figure|section)\b", re.I)
+
+
+@app.template_filter("post_html")
+def post_html(value):
+    """Render a post body.
+
+    The editor is TinyMCE, so a saved body is normally already valid HTML and
+    gets passed through untouched. Bodies that are plain text (older posts, or
+    a plain-text import) still get blank-line-to-paragraph conversion, so both
+    kinds render correctly and neither ends up double-wrapped.
+
+    Author markup is intentionally NOT escaped — the editor sits behind a
+    login, so only trusted content reaches this filter.
+    """
+    from markupsafe import Markup
+
+    if not value:
+        return ""
+    text = str(value)
+    if _BLOCK_TAG_RE.search(text):
+        return Markup(text)
+
+    blocks = [b.strip() for b in text.replace("\r\n", "\n").split("\n\n")]
+    return Markup("".join(
+        "<p>{}</p>".format(b.replace("\n", "<br />")) for b in blocks if b
+    ))
+
 
 
 @app.context_processor
@@ -310,13 +366,80 @@ def contact():
         logger.warning("Contact form submitted with missing required fields.")
         return render_template("contact.html", error=True)
 
-    # 3. Send the notification email. On failure, keep the form and warn.
+    # 3. Store the lead BEFORE emailing, so a Resend outage can never lose a
+    #    submission — it still shows up in the dashboard either way. The form
+    #    may declare its own source (e.g. a landing page); default to "contact".
+    source = request.form.get("source", "contact").strip().lower() or "contact"
+    lead_id = None
+    try:
+        lead_id = db.create_lead(name, email, phone, zip_code, size, notes,
+                                 source=source)
+    except Exception as exc:
+        logger.error("Could not store lead in the dashboard: %s", exc)
+
+    # 4. Send the notification email. On failure, keep the form and warn — the
+    #    lead itself is already saved above.
     if not send_contact_email(name, email, phone, zip_code, size, notes):
         return render_template("contact.html", error=True)
 
-    # 4. Success — redirect to the dedicated thank-you page. Using Post/Redirect/
+    if lead_id is not None:
+        try:
+            conn = db.get_db()
+            conn.execute("UPDATE leads SET emailed = 1 WHERE id = ?", (lead_id,))
+            conn.commit()
+        except Exception as exc:
+            logger.error("Could not flag lead %s as emailed: %s", lead_id, exc)
+
+    # 5. Success — redirect to the dedicated thank-you page. Using Post/Redirect/
     #    Get means a browser refresh lands on /thank-you instead of re-submitting.
     return redirect(url_for("thank_you"))
+
+
+# --- Blog (public side of the dashboard's Blog Posts section) ----------------
+# Lives at /blogs/ to match the permalink shown in the post editor. Not linked
+# from the main nav yet — add {"label": "Blog", "url": "/blogs"} to NAV_LINKS
+# above whenever you want it in the header.
+
+@app.route("/blogs")
+def blog():
+    """List every published post, newest first."""
+    posts = db.get_db().execute(
+        """SELECT * FROM posts WHERE status = 'published'
+           ORDER BY COALESCE(published_at, updated_at) DESC, id DESC"""
+    ).fetchall()
+    return render_template("blog.html", posts=posts)
+
+
+@app.route("/blogs/<slug>")
+def blog_post(slug):
+    """A single published post. Drafts 404 until they're published."""
+    conn = db.get_db()
+    post = conn.execute(
+        "SELECT * FROM posts WHERE slug = ? AND status = 'published'", (slug,)
+    ).fetchone()
+    if post is None:
+        abort(404)
+
+    # Count the read. Best-effort: a failure here must never break the page.
+    try:
+        conn.execute("UPDATE posts SET views = views + 1 WHERE id = ?",
+                     (post["id"],))
+        conn.commit()
+    except Exception as exc:
+        logger.warning("Could not increment views for %s: %s", slug, exc)
+
+    return render_template("blog_post.html", post=post)
+
+
+# Old /blog/... URLs kept alive so nothing that was already shared 404s.
+@app.route("/blog")
+def blog_legacy():
+    return redirect(url_for("blog"), code=301)
+
+
+@app.route("/blog/<slug>")
+def blog_post_legacy(slug):
+    return redirect(url_for("blog_post", slug=slug), code=301)
 
 
 @app.route("/thank-you")
