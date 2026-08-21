@@ -1,0 +1,10 @@
+{# Browser/app icons. Included by all three shells: the marketing site
+   (base.html), the dashboard (admin/base.html) and the sign-in page.
+
+   The SVG is what modern browsers use; the 32px PNG covers the rest, and
+   apple-touch-icon is the iOS home-screen tile. /favicon.ico is served by a
+   route in app.py for the bare request browsers make on their own. #}
+<link rel="icon" href="{{ url_for('static', filename='img/favicon/favicon.svg') }}" type="image/svg+xml" />
+<link rel="icon" href="{{ url_for('static', filename='img/favicon/favicon-32.png') }}" sizes="32x32" type="image/png" />
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='img/favicon/apple-touch-icon.png') }}" />
+<meta name="theme-color" content="#2c2416" />

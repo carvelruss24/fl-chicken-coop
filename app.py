@@ -18,7 +18,9 @@ import re
 from datetime import datetime, timedelta
 
 import requests
-from flask import Flask, abort, render_template, request, redirect, url_for
+from flask import (
+    Flask, abort, redirect, render_template, request, send_from_directory, url_for,
+)
 from dotenv import load_dotenv
 
 import db
@@ -58,7 +60,7 @@ app.config.update(
 
     # --- Recipients of every form submission ---
     # Falls back to the business inbox if CONTACT_RECEIVER is unset.
-    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "mitchell@flchickencoops.com"),
+    CONTACT_RECEIVER=os.getenv("CONTACT_RECEIVER", "Mitchellsisto@gmail.com"),
     CONTACT_CC=os.getenv("CONTACT_CC", ""),  # comma-separated, optional
 
     # --- reCAPTCHA ---
@@ -98,6 +100,7 @@ NAV_LINKS = [
     {"label": "How We Build", "url": "/how-we-build"},
     {"label": "Gallery",      "url": "/gallery"},
     {"label": "About",        "url": "/about"},
+    {"label": "Blog",         "url": "/blogs"},
     {"label": "FAQs",         "url": "/faqs"},
     {"label": "Service Area", "url": "/service-area"},
 ]
@@ -130,13 +133,13 @@ FOOTER_COLUMNS = [
 
 CONTACT = {
     "cta": {"label": "Contact Us", "url": "/contact"},
-    "email": "mitchell@FlChickenCoops.com",
-    "phone": "(305) 431-6505",
-    "phone_href": "tel:+13054316505",
+    "email": "Mitchellsisto@gmail.com",
+    "phone": "(305) 742-7965",
+    "phone_href": "tel:+13057427965",
     # Click-to-chat link (wa.me) using the business number in international
     # format, with a prefilled inquiry message customers can edit before sending.
     "whatsapp_href": (
-        "https://wa.me/13054316505"
+        "https://wa.me/13057427965"
         "?text=Hi%20Florida%20Chicken%20Coops%2C%20I%27d%20like%20to"
         "%20request%20a%20quote%20for%20a%20chicken%20coop."
     ),
@@ -396,9 +399,8 @@ def contact():
 
 
 # --- Blog (public side of the dashboard's Blog Posts section) ----------------
-# Lives at /blogs/ to match the permalink shown in the post editor. Not linked
-# from the main nav yet — add {"label": "Blog", "url": "/blogs"} to NAV_LINKS
-# above whenever you want it in the header.
+# Lives at /blogs/ to match the permalink shown in the post editor, and is in
+# NAV_LINKS above so it appears in the header and mobile menu.
 
 @app.route("/blogs")
 def blog():
@@ -440,6 +442,20 @@ def blog_legacy():
 @app.route("/blog/<slug>")
 def blog_post_legacy(slug):
     return redirect(url_for("blog_post", slug=slug), code=301)
+
+
+@app.route("/favicon.ico")
+def favicon():
+    """Serve the icon browsers request from the site root on their own.
+
+    The <link> tags point at /static/img/favicon/, but a bare /favicon.ico is
+    still fetched by browsers, crawlers and RSS readers — without this it's a
+    404 in the logs on every cold visit.
+    """
+    return send_from_directory(
+        os.path.join(app.static_folder, "img", "favicon"),
+        "favicon.ico", mimetype="image/vnd.microsoft.icon",
+    )
 
 
 @app.route("/thank-you")

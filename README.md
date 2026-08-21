@@ -101,9 +101,13 @@ Contact-form submissions are written to the `leads` table *before* the
 notification email is attempted, so a Resend outage can't lose a lead.
 
 The blog has a public side at `/blogs` and `/blogs/<slug>`; only `published`
-posts appear there, and `/blog/...` redirects to `/blogs/...`. It is deliberately
-not in the header nav yet — add `{"label": "Blog", "url": "/blogs"}` to
-`NAV_LINKS` in `app.py` when you want it.
+posts appear there, and `/blog/...` redirects to `/blogs/...`. "Blog" is in the
+header nav (and the mobile menu) via `NAV_LINKS` in `app.py`.
+
+Contact details — phone, email and the WhatsApp link — are defined once in the
+`CONTACT` dict in `app.py` and injected into every template, so they change in
+one place. `CONTACT_RECEIVER` (where form submissions are emailed) is separate
+and lives in `.env`; an `.env` value overrides the code default.
 
 ## Responsive behaviour
 

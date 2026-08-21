@@ -233,8 +233,9 @@ rail with **Post Settings** and **SEO Settings** tabs.
 
 `/blogs` and `/blogs/<slug>` are the public face of the dashboard's Blog Posts
 section; only `status = 'published'` rows are visible, drafts 404. `/blog/...`
-301-redirects to `/blogs/...` so previously shared links survive. The section is
-intentionally absent from `NAV_LINKS` — adding it is the client's call.
+301-redirects to `/blogs/...` so previously shared links survive. "Blog" is in
+`NAV_LINKS` between About and FAQs, so it appears in the header and the mobile
+menu automatically.
 
 `post_html` passes a body straight through when it already contains block tags
 (TinyMCE output) and only does blank-line-to-paragraph conversion otherwise, so
@@ -280,6 +281,21 @@ but the element stays on screen.
 Also: dashboard inputs go to 16px under 768px (smaller sizes make iOS Safari
 zoom the viewport), and `style.css:131` notes that every ancestor of
 `.site-header` must stay `overflow: visible` or the sticky header breaks.
+
+## Icons
+
+`static/img/favicon/` holds the browser icons, all generated from
+`favicon.svg` (the rooster from `logo.svg` in gold on a dark-brown rounded
+square — the wordmark is dropped because only the bird is legible at 16px).
+`templates/partials/favicon.html` carries the `<link>` tags and is included by
+all three shells (marketing, dashboard, sign-in), and `app.py` serves the bare
+`/favicon.ico` that browsers request on their own.
+
+They live under `static/img/` specifically because `.gitignore` ignores `*.png`
+and only re-includes `static/img/**/*.png` — favicons anywhere else would be
+silently untracked. Regenerate the rasters from the SVG with Playwright +
+Pillow if the mark changes; the sizes are 32 (PNG), 180 (apple-touch), 192, 512,
+plus a 16/32/48 multi-size `.ico`.
 
 ## Credentials and secrets
 
