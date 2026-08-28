@@ -10,6 +10,15 @@
   {% include 'partials/favicon.html' %}
   <meta name="robots" content="noindex, nofollow" />
   <title>{% block title %}Dashboard{% endblock %} — Florida Chicken Coops</title>
+
+  {# Playfair Display for display type only (page title, stat figures, card
+     headings) — the same brand serif the marketing site uses. Body copy, form
+     controls and tables stay on the system sans. #}
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&display=swap" />
+
   <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}" />
   {% block head_extra %}{% endblock %}
 </head>
@@ -88,7 +97,10 @@
         <button class="ad-burger" type="button" aria-expanded="false" aria-controls="ad-sidebar" aria-label="Open menu">
           <span></span>
         </button>
-        <h1 class="ad-topbar__title">{% block heading %}{{ self.title() }}{% endblock %}</h1>
+        <div class="ad-topbar__headings">
+          <p class="ad-eyebrow">{% block eyebrow %}Staff portal{% endblock %}</p>
+          <h1 class="ad-topbar__title">{% block heading %}{{ self.title() }}{% endblock %}</h1>
+        </div>
         <div class="ad-topbar__right">
           {% block topbar_extra %}{% endblock %}
           {% include 'admin/partials/identity.html' %}

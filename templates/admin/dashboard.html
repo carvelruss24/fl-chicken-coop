@@ -1,6 +1,7 @@
 {% extends "admin/base.html" %}
 {% set active_nav = 'dashboard' %}
 {% block title %}Dashboard{% endblock %}
+{% block heading %}Welcome back{% endblock %}
 
 {% block content %}
 <section class="ad-stats">
@@ -22,43 +23,33 @@
   </article>
 </section>
 
+{# The dashboard shows activity as a feed, not a table: a row is a person or a
+   post, not a set of columns. /admin/leads and /admin/posts keep their tables,
+   which is where the column data actually gets compared. #}
 <section class="ad-card">
   <div class="ad-card__head">
-    <h2>Recent leads</h2>
+    <div class="ad-card__headings">
+      <h2>Recent leads</h2>
+      <p class="ad-card__sub">Submissions from the contact form land here automatically.</p>
+    </div>
     <a class="ad-btn ad-btn--ghost" href="{{ url_for('admin.leads') }}">View all</a>
   </div>
 
   {% if recent_leads %}
-  <div class="ad-tablewrap">
-    <table class="ad-table">
-      <thead>
-        <tr>
-          <th scope="col">Name</th>
-          <th scope="col">Contact</th>
-          <th scope="col">Source</th>
-          <th scope="col">Status</th>
-          <th scope="col">Received</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for lead in recent_leads %}
-        <tr>
-          <td data-label="Name" class="ad-strong">
-            <a href="{{ url_for('admin.lead_detail', lead_id=lead['id']) }}">{{ lead['name'] }}</a>
-          </td>
-          <td data-label="Contact">
-            {% if lead['email'] %}<a href="mailto:{{ lead['email'] }}">{{ lead['email'] }}</a>
-            {% elif lead['phone'] %}<a href="tel:{{ lead['phone'] }}">{{ lead['phone'] }}</a>
-            {% else %}<span class="ad-dim">—</span>{% endif %}
-          </td>
-          <td data-label="Source"><span class="ad-pill ad-pill--source">{{ lead['source'] | source_label }}</span></td>
-          <td data-label="Status"><span class="ad-pill ad-pill--{{ lead['status'] }}">{{ lead['status'] | capitalize }}</span></td>
-          <td data-label="Received" class="ad-dim">{{ lead['created_at'] | pretty_date }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <ul class="ad-list">
+    {% for lead in recent_leads %}
+    <li class="ad-list__row">
+      <span class="ad-list__avatar" aria-hidden="true">{{ lead['name'] | initials }}</span>
+      <div class="ad-list__body">
+        <a class="ad-list__title" href="{{ url_for('admin.lead_detail', lead_id=lead['id']) }}">{{ lead['name'] }}</a>
+        {% set bits = [lead['zip_code'], lead['size']] | select | list %}
+        {% if bits %}<p class="ad-list__meta">{{ bits | join(' · ') }}</p>{% endif %}
+      </div>
+      <span class="ad-pill ad-pill--{{ lead['status'] }}">{{ lead['status'] | capitalize }}</span>
+      <span class="ad-list__time">{{ lead['created_at'] | time_ago }}</span>
+    </li>
+    {% endfor %}
+  </ul>
   {% else %}
   <div class="ad-empty">
     <strong>No leads yet</strong>
@@ -69,33 +60,32 @@
 
 <section class="ad-card">
   <div class="ad-card__head">
-    <h2>Recent posts</h2>
+    <div class="ad-card__headings">
+      <h2>Recent posts</h2>
+      <p class="ad-card__sub">Write your first one and it will appear on the blog once published.</p>
+    </div>
     <a class="ad-btn" href="{{ url_for('admin.post_new') }}">New post</a>
   </div>
 
   {% if recent_posts %}
-  <div class="ad-tablewrap">
-    <table class="ad-table">
-      <thead>
-        <tr>
-          <th scope="col">Title</th>
-          <th scope="col">Status</th>
-          <th scope="col">Updated</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for post in recent_posts %}
-        <tr>
-          <td data-label="Title" class="ad-strong">
-            <a href="{{ url_for('admin.post_edit', post_id=post['id']) }}">{{ post['title'] }}</a>
-          </td>
-          <td data-label="Status"><span class="ad-pill ad-pill--{{ post['status'] }}">{{ post['status'] }}</span></td>
-          <td data-label="Updated" class="ad-dim">{{ post['updated_at'] | pretty_date }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <ul class="ad-list">
+    {% for post in recent_posts %}
+    <li class="ad-list__row">
+      <span class="ad-list__avatar" aria-hidden="true">{{ post['title'] | initials }}</span>
+      <div class="ad-list__body">
+        <a class="ad-list__title" href="{{ url_for('admin.post_edit', post_id=post['id']) }}">{{ post['title'] }}</a>
+        <p class="ad-list__meta">
+          {% if post['status'] == 'published' %}
+          Published · {{ (post['published_at'] or post['updated_at']) | pretty_date }}
+          {% else %}
+          Draft · last edited {{ post['updated_at'] | time_ago | lower }}
+          {% endif %}
+        </p>
+      </div>
+      <span class="ad-pill ad-pill--{{ post['status'] }}">{{ post['status'] | capitalize }}</span>
+    </li>
+    {% endfor %}
+  </ul>
   {% else %}
   <div class="ad-empty">
     <strong>No posts yet</strong>

@@ -674,6 +674,56 @@ def pretty_date(value, with_time=False):
     return value
 
 
+@bp.app_template_filter("time_ago")
+def time_ago(value):
+    """'2026-08-28 07:10:00' -> '2 hours ago'; older than a week -> 'Aug 12, 2026'.
+
+    The dashboard's activity lists read as a feed, so recent rows want a
+    relative stamp. Past a week that stops being useful ("47 days ago" tells you
+    nothing), so it falls back to the same absolute date `pretty_date` renders.
+    """
+    if not value:
+        return "—"
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            then = datetime.strptime(str(value), fmt)
+            break
+        except ValueError:
+            continue
+    else:
+        return value
+
+    seconds = (datetime.now() - then).total_seconds()
+    if seconds < 0:                       # a post scheduled for the future
+        return pretty_date(value)
+    if seconds < 90:
+        return "Just now"
+    minutes = seconds / 60
+    if minutes < 60:
+        return "%d minutes ago" % round(minutes)
+    hours = minutes / 60
+    if hours < 24:
+        n = round(hours)
+        return "1 hour ago" if n == 1 else "%d hours ago" % n
+    days = int(hours // 24)
+    if days == 1:
+        return "Yesterday"
+    if days < 7:
+        return "%d days ago" % days
+    return pretty_date(value)
+
+
+@bp.app_template_filter("initials")
+def initials(value, count=2):
+    """'Marcus Delgado' -> 'MD'. Feeds the round avatars in the activity lists.
+
+    Takes the first letter of the first `count` words, so it works on a person's
+    name and on a post title alike.
+    """
+    words = re.findall(r"[A-Za-z0-9]+", str(value or ""))
+    return "".join(word[0] for word in words[:count]).upper() or "?"
+
+
 @bp.app_template_filter("tag_list")
 def tag_list(value):
     """Comma-separated tag string -> list, for rendering chips."""

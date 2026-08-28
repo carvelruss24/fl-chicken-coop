@@ -1,15 +1,16 @@
-{# Signed-in identity: name + the agency wordmark (or initials if the logo
-   asset is absent). Shared by the standard topbar and the editor's action bar. #}
+{# Signed-in identity: name, status, and a round initials badge. Shared by the
+   standard topbar and the editor's action bar.
+
+   The badge is deliberate, not a fallback: the supplied design uses initials
+   here. `smash_logo` (the agency wordmark) is still injected by admin.py and
+   can be swapped back in if the wordmark is wanted instead — but it is a
+   stacked three-line lockup, which is why it never sat well in a 68px bar. #}
 {% if g.user %}
 <span class="ad-who">
   <strong>{{ g.user['display_name'] or g.user['username'] }}</strong>
   Signed in
 </span>
-{% if smash_logo %}
-<img class="ad-brandmark" src="{{ smash_logo }}" alt="Smash Interactive" />
-{% else %}
 <span class="ad-avatar" aria-hidden="true">
   {{ (g.user['display_name'] or g.user['username'])[:2] | upper }}
 </span>
-{% endif %}
 {% endif %}

@@ -94,7 +94,7 @@ comparison, not live navigation.
 | CSS | `static/css/style.css` (+ `reset.css`) | `static/css/admin.css` |
 | Shell | `templates/base.html` + `templates/partials/` | `templates/admin/base.html` |
 | Prefix | BEM-ish per component (`.page-hero__title`) | everything `ad-` |
-| Fonts | Playfair Display for display type, system sans for body | system sans only |
+| Fonts | Playfair Display for display type, system sans for body | same split: Playfair for the page title, stat figures and card headings; system sans everywhere else |
 
 The dashboard does **not** extend the marketing `base.html` and does not load
 `style.css` — that isolation is intentional (no GTM, no marketing scripts, and
@@ -150,6 +150,21 @@ posts (CRUD + draft↔published), account (profile + password change).
 
 - Sidebar highlighting works via a top-level `{% set active_nav = 'leads' %}` in
   each child template — Jinja evaluates that before the parent renders.
+- The dashboard *index* shows activity as `.ad-list` feed rows (avatar, title +
+  meta, status pill, relative time), not a table. `/admin/leads` and
+  `/admin/posts` keep their tables — that's where columns actually get
+  compared. Don't unify them.
+- The topbar carries an eyebrow above the title (`{% block eyebrow %}`, default
+  "Staff portal") and the dashboard overrides `{% block heading %}` to
+  "Welcome back", which is why its `title` block still says "Dashboard" (that
+  one feeds `<title>`).
+- `time_ago` renders relative stamps for the first week and falls back to
+  `pretty_date` after; `initials` takes one letter per word ("Marcus Delgado" →
+  "MD"). The identity badge deliberately uses the first two *letters* instead
+  (`[:2]`, "Smash Interactive Agency" → "SM"), matching the supplied design.
+- Dashboard status colours are all warm on purpose (`--ad-gold`, `--ad-slate`,
+  `--ad-green` …). The old blue/violet pills clashed with the brown-and-cream
+  chrome; a row of pills should read as one set.
 - `admin/base.html` exposes `{% block topbar %}` (whole action bar) and
   `{% block scripts %}`; the editor overrides both. The identity chip lives in
   `admin/partials/identity.html` so both topbars share it.

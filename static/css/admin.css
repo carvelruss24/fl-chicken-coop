@@ -21,30 +21,36 @@
   --ad-accent-dark: #ab8752;
   --ad-accent-ink: #2c2416;
 
-  --ad-bg: #f4f5f7;
+  /* Warm neutrals, not the usual cool greys: the dashboard sits next to a
+     cream-and-brown brand, and a #667085 grey next to #2c2416 reads as dirty. */
+  --ad-bg: #faf7f1;
   --ad-surface: #ffffff;
-  --ad-text: #14181f;
-  --ad-muted: #667085;
-  --ad-border: #e4e7ec;
-  --ad-border-soft: #eef0f3;
+  --ad-text: #2c2416;
+  --ad-muted: #8a7c66;
+  --ad-border: #e9e1d2;
+  --ad-border-soft: #f2ebdf;
 
-  --ad-green: #067647;
-  --ad-green-bg: #ecfdf3;
-  --ad-blue: #175cd3;
-  --ad-blue-bg: #eff6ff;
-  --ad-violet: #5925dc;
-  --ad-violet-bg: #f4f3ff;
-  --ad-amber: #b54708;
-  --ad-amber-bg: #fffaeb;
-  --ad-red: #b42318;
-  --ad-red-bg: #fef3f2;
-  --ad-slate: #475467;
-  --ad-slate-bg: #f2f4f7;
+  /* Status colours, all pulled toward the same warm family so a row of pills
+     reads as one set rather than a bag of stoplight colours. */
+  --ad-green: #4d6b43;
+  --ad-green-bg: #e6eee1;
+  --ad-gold: #8a6a2f;
+  --ad-gold-bg: #f4e7cf;
+  --ad-gold-soft: #9a7c42;
+  --ad-gold-soft-bg: #f8f0de;
+  --ad-amber: #9a6b1f;
+  --ad-amber-bg: #f9f0d9;
+  --ad-red: #9c3b2a;
+  --ad-red-bg: #f7e6e2;
+  --ad-slate: #6f665a;
+  --ad-slate-bg: #efebe3;
 
   --ad-radius: 12px;
   --ad-radius-sm: 8px;
-  --ad-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .1);
+  --ad-shadow: 0 1px 2px rgba(44, 36, 22, .05), 0 1px 3px rgba(44, 36, 22, .08);
   --ad-font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Display serif, for the page title, stat figures and card headings only. */
+  --ad-font-display: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -108,7 +114,13 @@
 }
 .ad-sidebar__brand img { width: 100%; max-width: 190px; }
 
-.ad-sidebar__nav { padding: .5rem .75rem; }
+.ad-sidebar__nav {
+  /* Horizontal inset comes from the margin, not padding, so the divider stops
+     short of the sidebar edges while the nav pills keep their .75rem inset. */
+  margin: 0 .75rem;
+  padding: .5rem 0 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
 .ad-sidebar__nav ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
 
 .ad-navlink {
@@ -171,18 +183,36 @@
   background: var(--ad-surface);
   border-bottom: 1px solid var(--ad-border);
 }
-.ad-topbar__title { font-size: 1.375rem; font-weight: 700; letter-spacing: -.01em; }
+.ad-topbar__headings { min-width: 0; }
+.ad-topbar__title {
+  font-family: var(--ad-font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -.01em;
+}
 .ad-topbar__right { margin-left: auto; display: flex; align-items: center; gap: .75rem; }
 
+/* Small gold label above a heading ("STAFF PORTAL"). */
+.ad-eyebrow {
+  font-size: .6875rem;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+  color: var(--ad-accent-dark);
+  margin-bottom: .125rem;
+}
+
 .ad-avatar {
-  width: 36px; height: 36px; flex: none;
+  width: 38px; height: 38px; flex: none;
   border-radius: 50%;
-  background: var(--ad-accent);
-  color: var(--ad-accent-ink);
+  background: var(--ad-sidebar);
+  color: var(--ad-accent);
   display: grid; place-items: center;
   font-weight: 700; font-size: .8125rem;
+  letter-spacing: .02em;
 }
-.ad-who { font-size: .875rem; color: var(--ad-muted); }
+.ad-who { font-size: .8125rem; color: var(--ad-muted); text-align: right; }
 .ad-who strong { display: block; color: var(--ad-text); font-size: .9375rem; }
 
 /* Agency wordmark, shown instead of the initials badge when the asset exists.
@@ -257,7 +287,14 @@
   padding: 1.125rem 1.25rem;
   border-bottom: 1px solid var(--ad-border-soft);
 }
-.ad-card__head h2 { font-size: 1.0625rem; font-weight: 700; }
+.ad-card__head h2 {
+  font-family: var(--ad-font-display);
+  font-size: 1.1875rem;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.ad-card__headings { min-width: 0; }
+.ad-card__sub { font-size: .875rem; color: var(--ad-muted); margin-top: .125rem; }
 .ad-card__head .ad-btn, .ad-card__head .ad-actions { margin-left: auto; }
 .ad-card__body { padding: 1.25rem; }
 .ad-card__foot {
@@ -271,21 +308,38 @@
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: clamp(.875rem, 2vw, 1.5rem);
   margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+  /* Room for the gold tab, which sits 6px above each card's top edge. */
+  padding-top: 6px;
 }
 .ad-stat {
+  position: relative;
   background: var(--ad-surface);
   border: 1px solid var(--ad-border);
   border-radius: var(--ad-radius);
   box-shadow: var(--ad-shadow);
   padding: 1.375rem 1.5rem;
 }
-.ad-stat__value {
-  font-size: clamp(1.875rem, 1.4rem + 1.6vw, 2.5rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -.02em;
+/* Gold tab peeking above the card. Sized to sit entirely ABOVE the top edge
+   rather than behind it — a child with z-index:-1 would paint behind its own
+   parent's background and vanish. */
+.ad-stat::before {
+  content: "";
+  position: absolute;
+  left: 1.5rem;
+  right: 1.5rem;
+  top: -6px;
+  height: 6px;
+  background: var(--ad-accent);
+  border-radius: 6px 6px 0 0;
 }
-.ad-stat__label { color: var(--ad-muted); font-size: .9375rem; margin-top: .25rem; }
+.ad-stat__value {
+  font-family: var(--ad-font-display);
+  font-size: clamp(2rem, 1.5rem + 1.7vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -.01em;
+}
+.ad-stat__label { color: var(--ad-muted); font-size: .9375rem; margin-top: .375rem; }
 
 /* --------------------------------------------------------------------------
    Tables (desktop) -> cards (mobile)
@@ -319,12 +373,61 @@
   vertical-align: middle;
 }
 .ad-table tbody tr:last-child td { border-bottom: 0; }
-.ad-table tbody tr:hover { background: #fafbfc; }
+.ad-table tbody tr:hover { background: #fdfbf7; }
 .ad-table .ad-strong { font-weight: 700; }
 .ad-table .ad-strong a:hover { color: var(--ad-accent-dark); text-decoration: underline; }
 .ad-table .ad-dim { color: var(--ad-muted); white-space: nowrap; }
 .ad-table .ad-nowrap { white-space: nowrap; }
 .ad-table .ad-right { text-align: right; }
+
+/* --- Activity list ---
+   The dashboard's feed rows: avatar, title + meta, status, time. Used instead
+   of a table because a row here is one person or one post, not a set of
+   columns to compare. */
+.ad-list { list-style: none; margin: 0; padding: 0; }
+.ad-list__row {
+  display: flex;
+  align-items: center;
+  gap: .875rem;
+  padding: .9375rem 1.25rem;
+  border-bottom: 1px solid var(--ad-border-soft);
+}
+.ad-list__row:last-child { border-bottom: 0; }
+.ad-list__row:hover { background: #fdfbf7; }
+
+.ad-list__avatar {
+  width: 38px; height: 38px; flex: none;
+  border-radius: 50%;
+  background: var(--ad-green-bg);
+  color: var(--ad-green);
+  display: grid; place-items: center;
+  font-size: .75rem; font-weight: 700; letter-spacing: .02em;
+}
+
+/* min-width:0 lets a long title ellipsize instead of forcing the row wider. */
+.ad-list__body { flex: 1; min-width: 0; }
+.ad-list__title {
+  display: block;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ad-list__title:hover { color: var(--ad-accent-dark); text-decoration: underline; }
+.ad-list__meta {
+  font-size: .8125rem;
+  color: var(--ad-muted);
+  margin-top: .0625rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ad-list__time {
+  flex: none;
+  font-size: .8125rem;
+  color: var(--ad-muted);
+  white-space: nowrap;
+}
 
 .ad-empty { padding: 3rem 1.25rem; text-align: center; color: var(--ad-muted); }
 .ad-empty strong { display: block; color: var(--ad-text); margin-bottom: .25rem; }
@@ -341,14 +444,14 @@
   background: var(--ad-slate-bg);
   color: var(--ad-slate);
 }
-.ad-pill--new       { background: var(--ad-blue-bg);   color: var(--ad-blue); }
-.ad-pill--contacted { background: var(--ad-amber-bg);  color: var(--ad-amber); }
-.ad-pill--quoted    { background: var(--ad-violet-bg); color: var(--ad-violet); }
-.ad-pill--won       { background: var(--ad-green-bg);  color: var(--ad-green); }
-.ad-pill--lost      { background: var(--ad-red-bg);    color: var(--ad-red); }
-.ad-pill--published { background: var(--ad-green-bg);  color: var(--ad-green); }
-.ad-pill--draft     { background: var(--ad-slate-bg);  color: var(--ad-slate); }
-.ad-pill--source    { background: var(--ad-violet-bg); color: var(--ad-violet); }
+.ad-pill--new       { background: var(--ad-gold-bg);      color: var(--ad-gold); }
+.ad-pill--contacted { background: var(--ad-slate-bg);     color: var(--ad-slate); }
+.ad-pill--quoted    { background: var(--ad-gold-soft-bg); color: var(--ad-gold-soft); }
+.ad-pill--won       { background: var(--ad-green-bg);     color: var(--ad-green); }
+.ad-pill--lost      { background: var(--ad-red-bg);       color: var(--ad-red); }
+.ad-pill--published { background: var(--ad-green-bg);     color: var(--ad-green); }
+.ad-pill--draft     { background: var(--ad-gold-bg);      color: var(--ad-gold); }
+.ad-pill--source    { background: var(--ad-slate-bg);     color: var(--ad-slate); }
 
 /* --------------------------------------------------------------------------
    Buttons, forms
@@ -376,8 +479,8 @@
   border-color: var(--ad-border);
   color: var(--ad-text);
 }
-.ad-btn--ghost:hover { background: #f9fafb; border-color: #d0d5dd; color: var(--ad-text); }
-.ad-btn--danger { background: var(--ad-surface); border-color: #fda29b; color: var(--ad-red); }
+.ad-btn--ghost:hover { background: #faf7f1; border-color: var(--ad-accent); color: var(--ad-text); }
+.ad-btn--danger { background: var(--ad-surface); border-color: #d9a79b; color: var(--ad-red); }
 .ad-btn--danger:hover { background: var(--ad-red-bg); color: var(--ad-red); }
 .ad-btn--sm { padding: .4375rem .6875rem; font-size: .8125rem; }
 .ad-btn--block { width: 100%; }
@@ -396,9 +499,9 @@
   font-size: .9375rem;
   color: var(--ad-text);
   background: var(--ad-surface);
-  border: 1px solid #d0d5dd;
+  border: 1px solid #d8cfbd;
   border-radius: var(--ad-radius-sm);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, .05);
+  box-shadow: 0 1px 2px rgba(44, 36, 22, .04);
   /* 16px on touch keyboards stops iOS Safari from zooming the viewport. */
 }
 .ad-textarea { resize: vertical; min-height: 140px; line-height: 1.6; }
@@ -492,8 +595,8 @@
   font-size: .9375rem;
   font-weight: 500;
 }
-.ad-flash--success { background: var(--ad-green-bg); border-color: #abefc6; color: #085d3a; }
-.ad-flash--error { background: var(--ad-red-bg); border-color: #fecdca; color: #912018; }
+.ad-flash--success { background: var(--ad-green-bg); border-color: #c3d6b8; color: #3b5633; }
+.ad-flash--error { background: var(--ad-red-bg); border-color: #e2b6ab; color: #7d2c1e; }
 
 /* --------------------------------------------------------------------------
    Account settings
@@ -750,6 +853,11 @@
   .ad-topbar .ad-brandmark { height: 32px; max-width: 112px; }
   .ad-stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; }
   .ad-stat { padding: 1rem 1.125rem; }
+  .ad-stat::before { left: 1.125rem; right: 1.125rem; }
+  /* The time drops to its own line under the meta rather than squeezing the
+     title, and the pill keeps its place beside the avatar. */
+  .ad-list__row { flex-wrap: wrap; padding: .875rem 1rem; row-gap: .375rem; }
+  .ad-list__time { width: 100%; padding-left: calc(38px + .875rem); }
   .ad-card__head, .ad-toolbar, .ad-card__body, .ad-card__foot { padding-left: 1rem; padding-right: 1rem; }
   .ad-dl { grid-template-columns: minmax(0, 1fr); }
   .ad-dl dt { padding-bottom: 0; border-bottom: 0; }
