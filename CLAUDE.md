@@ -31,6 +31,31 @@ python _shot.py out.png 390   # args: outfile, viewport width
 `_shot.py` hardcodes the home page on port `5057`, so it only shoots `/` — edit
 its `url` or write a throwaway Playwright script for anything else.
 
+## Deployment
+
+**Pushing `main` to GitHub deploys it.** The live site updates on its own — no
+SSH, no `git pull`, no service restart. Nothing in this repo says so: there is
+no `.github/workflows/`, no Procfile, no deploy script, because the automation
+is configured on the server. Don't read that absence as "deployment is manual"
+and write a runbook for it.
+
+So a push to `main` *is* a release. Don't push half-finished work there, and
+after pushing, the next step is to ask for a check of the live site rather than
+to hand over server commands.
+
+Two consequences worth holding on to:
+
+- **Live data survives every deploy.** `instance/` is gitignored, so
+  `instance/data/*.json` and `instance/secret_key` are never overwritten or
+  reset by a deploy. This is also why a fresh deploy doesn't re-seed or
+  re-import anything.
+- **Two things still need a shell on the box**, because a deploy can't do them:
+  running `manage.py` (account recovery, password resets) and editing `.env`.
+  Run `manage.py` as the *same OS user* the app runs as — `users.json`,
+  `security.json` and `secret_key` are chmod 0600, so a file created by `root`
+  is unreadable by a `www-data` gunicorn, which breaks sign-in in exactly the
+  way described under Sign-in hardening.
+
 When verifying non-trivially, prefer a throwaway store over the real one: set
 `DATABASE_PATH` to a temp *directory* and use `app.test_client()`, which
 exercises routes without a live server. Stub `app.send_contact_email` so tests
