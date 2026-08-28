@@ -1,15 +1,15 @@
 """Admin dashboard blueprint — leads inbox, blog editor, account settings.
 
 Everything lives under /admin and is gated by @login_required, which checks a
-signed session cookie. Sign-in credentials come from the users table (see
+signed session cookie. Sign-in credentials come from the users store (see
 db.py, which seeds the development login on first boot).
 
-Kept deliberately dependency-free: no Flask-Login, no ORM, no build step. The
+Kept deliberately dependency-free: no Flask-Login, no ORM, no database and no
+build step — the data layer is a handful of JSON files behind db.py. The
 templates in templates/admin/ extend templates/admin/base.html.
 """
 
 import functools
-import math
 import os
 import re
 import uuid
@@ -19,12 +19,12 @@ from flask import (
     Blueprint, current_app, flash, g, jsonify, redirect, render_template,
     request, session, url_for,
 )
-from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
+import db
 from db import (
     LEAD_STATUSES, POST_STATUSES, ROLE_CLIENT, ROLE_DEVELOPER,
-    find_user_by_role, get_db, normalise_stamp, now_iso, parse_tags,
+    find_user_by_role, normalise_stamp, now_iso, parse_tags,
     read_time_minutes, slugify, suggest_password, unique_slug,
 )
 
@@ -50,9 +50,7 @@ def load_current_user():
     user_id = session.get("user_id")
     g.user = None
     if user_id is not None:
-        g.user = get_db().execute(
-            "SELECT * FROM users WHERE id = ?", (user_id,)
-        ).fetchone()
+        g.user = db.get_user(user_id)
 
 
 def login_required(view):
@@ -75,6 +73,23 @@ def _safe_next(target: str) -> str:
     return url_for("admin.dashboard")
 
 
+def _throttle_key(username: str) -> str:
+    """Brute-force counters are per username AND per client address.
+
+    Keyed on both so one attacker hammering an account can't lock the real
+    owner out from their own address, while a single address spraying many
+    usernames still gets throttled.
+    """
+    return "%s|%s" % ((username or "").lower(), request.remote_addr or "-")
+
+
+def _humanise_wait(seconds: int) -> str:
+    if seconds < 60:
+        return "%d seconds" % seconds
+    minutes = max(1, round(seconds / 60))
+    return "1 minute" if minutes == 1 else "%d minutes" % minutes
+
+
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if g.get("user") is not None:
@@ -85,25 +100,34 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        row = get_db().execute(
-            "SELECT * FROM users WHERE username = ?", (username,)
-        ).fetchone()
+        throttle_key = _throttle_key(username)
+
+        # Refuse to even check the password while locked out, so a stolen
+        # username can't be brute-forced by volume.
+        locked = db.lockout_seconds(throttle_key)
+        if locked:
+            error = ("Too many failed attempts. Try again in %s."
+                     % _humanise_wait(locked))
+            return render_template("admin/login.html", error=error,
+                                   username=username)
+
+        user = db.verify_login(username, password)
 
         # One generic message for both branches so the form can't be used to
         # enumerate valid usernames.
-        if row is None or not check_password_hash(row["password_hash"], password):
+        if user is None:
+            wait = db.record_login_failure(throttle_key)
             error = "Incorrect username or password."
+            if wait:
+                error += (" Too many failed attempts — try again in %s."
+                          % _humanise_wait(wait))
             current_app.logger.warning("Failed dashboard sign-in for %r", username)
         else:
+            db.clear_login_failures(throttle_key)
             session.clear()
-            session["user_id"] = row["id"]
+            session["user_id"] = user["id"]
             session.permanent = True
-            conn = get_db()
-            conn.execute(
-                "UPDATE users SET last_login_at = ? WHERE id = ?",
-                (now_iso(), row["id"]),
-            )
-            conn.commit()
+            db.touch_last_login(user["id"])
             return redirect(_safe_next(request.args.get("next", "")))
 
     return render_template("admin/login.html", error=error, username=username)
@@ -121,30 +145,17 @@ def logout():
 @bp.route("/")
 @login_required
 def dashboard():
-    conn = get_db()
     stats = {
-        "leads_total": conn.execute("SELECT COUNT(*) FROM leads").fetchone()[0],
-        "leads_new": conn.execute(
-            "SELECT COUNT(*) FROM leads WHERE status = 'new'"
-        ).fetchone()[0],
-        "posts_published": conn.execute(
-            "SELECT COUNT(*) FROM posts WHERE status = 'published'"
-        ).fetchone()[0],
-        "posts_drafts": conn.execute(
-            "SELECT COUNT(*) FROM posts WHERE status = 'draft'"
-        ).fetchone()[0],
+        "leads_total": db.count_leads(),
+        "leads_new": db.count_leads("new"),
+        "posts_published": db.count_posts("published"),
+        "posts_drafts": db.count_posts("draft"),
     }
-    recent_leads = conn.execute(
-        "SELECT * FROM leads ORDER BY created_at DESC, id DESC LIMIT 5"
-    ).fetchall()
-    recent_posts = conn.execute(
-        "SELECT * FROM posts ORDER BY updated_at DESC, id DESC LIMIT 5"
-    ).fetchall()
     return render_template(
         "admin/dashboard.html",
         stats=stats,
-        recent_leads=recent_leads,
-        recent_posts=recent_posts,
+        recent_leads=db.recent_leads(5),
+        recent_posts=db.recent_posts(5),
     )
 
 
@@ -154,48 +165,25 @@ def dashboard():
 @login_required
 def leads():
     """Paginated leads table with a status filter and a name/email/phone search."""
-    conn = get_db()
     status = request.args.get("status", "").strip().lower()
     query = request.args.get("q", "").strip()
     page = max(1, request.args.get("page", 1, type=int) or 1)
 
-    where, params = [], []
-    if status in LEAD_STATUSES:
-        where.append("status = ?")
-        params.append(status)
-    if query:
-        where.append("(name LIKE ? OR email LIKE ? OR phone LIKE ? OR zip_code LIKE ?)")
-        params += ["%" + query + "%"] * 4
-    clause = "WHERE " + " AND ".join(where) if where else ""
+    rows, total, pages, page = db.search_leads(
+        status=status, query=query, page=page, per_page=PER_PAGE)
 
-    total = conn.execute(
-        "SELECT COUNT(*) FROM leads " + clause, params
-    ).fetchone()[0]
-    pages = max(1, math.ceil(total / PER_PAGE))
-    page = min(page, pages)
-    rows = conn.execute(
-        "SELECT * FROM leads " + clause
-        + " ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
-        params + [PER_PAGE, (page - 1) * PER_PAGE],
-    ).fetchall()
-
-    counts = {
-        row["status"]: row["n"]
-        for row in conn.execute(
-            "SELECT status, COUNT(*) AS n FROM leads GROUP BY status"
-        ).fetchall()
-    }
     return render_template(
         "admin/leads.html",
         leads=rows, total=total, page=page, pages=pages,
-        status=status, q=query, counts=counts, statuses=LEAD_STATUSES,
+        status=status, q=query, counts=db.lead_status_counts(),
+        statuses=LEAD_STATUSES,
     )
 
 
 @bp.route("/leads/<int:lead_id>")
 @login_required
 def lead_detail(lead_id):
-    row = get_db().execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+    row = db.get_lead(lead_id)
     if row is None:
         flash("That lead no longer exists.", "error")
         return redirect(url_for("admin.leads"))
@@ -208,20 +196,17 @@ def lead_status(lead_id):
     new_status = request.form.get("status", "").strip().lower()
     if new_status not in LEAD_STATUSES:
         flash("Unknown status.", "error")
-    else:
-        conn = get_db()
-        conn.execute("UPDATE leads SET status = ? WHERE id = ?", (new_status, lead_id))
-        conn.commit()
+    elif db.set_lead_status(lead_id, new_status):
         flash("Lead marked " + new_status + ".", "success")
+    else:
+        flash("That lead no longer exists.", "error")
     return redirect(request.form.get("back") or url_for("admin.leads"))
 
 
 @bp.route("/leads/<int:lead_id>/delete", methods=["POST"])
 @login_required
 def lead_delete(lead_id):
-    conn = get_db()
-    conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
-    conn.commit()
+    db.delete_lead(lead_id)
     flash("Lead deleted.", "success")
     return redirect(url_for("admin.leads"))
 
@@ -231,32 +216,12 @@ def lead_delete(lead_id):
 @bp.route("/posts")
 @login_required
 def posts():
-    conn = get_db()
     status = request.args.get("status", "").strip().lower()
     query = request.args.get("q", "").strip()
-
-    where, params = [], []
-    if status in POST_STATUSES:
-        where.append("status = ?")
-        params.append(status)
-    if query:
-        where.append("(title LIKE ? OR excerpt LIKE ?)")
-        params += ["%" + query + "%"] * 2
-    clause = "WHERE " + " AND ".join(where) if where else ""
-
-    rows = conn.execute(
-        "SELECT * FROM posts " + clause + " ORDER BY updated_at DESC, id DESC",
-        params,
-    ).fetchall()
-    counts = {
-        row["status"]: row["n"]
-        for row in conn.execute(
-            "SELECT status, COUNT(*) AS n FROM posts GROUP BY status"
-        ).fetchall()
-    }
+    rows = db.search_posts(status=status, query=query)
     return render_template(
         "admin/posts.html", posts=rows, status=status, q=query,
-        counts=counts, statuses=POST_STATUSES, total=len(rows),
+        counts=db.post_status_counts(), statuses=POST_STATUSES, total=len(rows),
     )
 
 
@@ -299,22 +264,9 @@ def _post_from_form():
     }
 
 
-def _known_taxonomy():
-    """Existing categories and tags, for the combobox and tag suggestions."""
-    conn = get_db()
-    categories = sorted({
-        row["category"] for row in
-        conn.execute("SELECT DISTINCT category FROM posts WHERE category != ''")
-    })
-    tags = set()
-    for row in conn.execute("SELECT tags FROM posts WHERE tags != ''"):
-        tags.update(parse_tags(row["tags"]))
-    return categories, sorted(tags, key=str.lower)
-
-
 def _editor_context(post, is_new, post_id=None):
     """Everything the editor template needs beyond the post itself."""
-    categories, tags = _known_taxonomy()
+    categories, tags = db.known_taxonomy()
     return {
         "post": post,
         "is_new": is_new,
@@ -336,34 +288,22 @@ def post_new():
             return render_template("admin/post_form.html",
                                    **_editor_context(data, True))
 
-        conn = get_db()
         stamp = now_iso()
-        published_at = data["published_at"] or (
-            stamp if data["status"] == "published" else None)
-        cur = conn.execute(
-            """INSERT INTO posts
-                   (title, slug, excerpt, body, cover_image, status, author,
-                    created_at, updated_at, published_at, overview, caption,
-                    author_name, author_avatar, category, tags, seo_title,
-                    views, read_time)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)""",
-            (
-                data["title"],
-                unique_slug(data["slug"] or data["title"]),
-                data["excerpt"], data["body"], data["cover_image"],
-                data["status"],
-                g.user["display_name"] or g.user["username"],
-                stamp, stamp, published_at,
-                data["overview"], data["caption"],
-                data["author_name"] or (g.user["display_name"] or g.user["username"]),
-                data["author_avatar"], data["category"], data["tags"],
-                data["seo_title"], data["read_time"],
-            ),
-        )
-        conn.commit()
+        who = g.user["display_name"] or g.user["username"]
+        post_id = db.create_post({
+            **data,
+            "slug": unique_slug(data["slug"] or data["title"]),
+            "author": who,
+            "author_name": data["author_name"] or who,
+            "created_at": stamp,
+            "updated_at": stamp,
+            "published_at": data["published_at"] or (
+                stamp if data["status"] == "published" else None),
+            "views": 0,
+        })
         flash("Post published." if data["status"] == "published"
               else "Draft saved.", "success")
-        return redirect(url_for("admin.post_edit", post_id=cur.lastrowid))
+        return redirect(url_for("admin.post_edit", post_id=post_id))
 
     return render_template("admin/post_form.html", **_editor_context(None, True))
 
@@ -371,8 +311,7 @@ def post_new():
 @bp.route("/posts/<int:post_id>/edit", methods=["GET", "POST"])
 @login_required
 def post_edit(post_id):
-    conn = get_db()
-    row = conn.execute("SELECT * FROM posts WHERE id = ?", (post_id,)).fetchone()
+    row = db.get_post(post_id)
     if row is None:
         flash("That post no longer exists.", "error")
         return redirect(url_for("admin.posts"))
@@ -390,24 +329,12 @@ def post_edit(post_id):
         if data["status"] == "published" and not published_at:
             published_at = now_iso()
 
-        conn.execute(
-            """UPDATE posts SET title = ?, slug = ?, excerpt = ?, body = ?,
-                   cover_image = ?, status = ?, updated_at = ?, published_at = ?,
-                   overview = ?, caption = ?, author_name = ?, author_avatar = ?,
-                   category = ?, tags = ?, seo_title = ?, read_time = ?
-               WHERE id = ?""",
-            (
-                data["title"],
-                unique_slug(data["slug"] or data["title"], post_id=post_id),
-                data["excerpt"], data["body"], data["cover_image"],
-                data["status"], now_iso(), published_at,
-                data["overview"], data["caption"],
-                data["author_name"], data["author_avatar"],
-                data["category"], data["tags"], data["seo_title"],
-                data["read_time"], post_id,
-            ),
-        )
-        conn.commit()
+        db.update_post(post_id, {
+            **data,
+            "slug": unique_slug(data["slug"] or data["title"], post_id=post_id),
+            "updated_at": now_iso(),
+            "published_at": published_at,
+        })
         flash("Post published." if data["status"] == "published"
               else "Changes saved.", "success")
         return redirect(url_for("admin.post_edit", post_id=post_id))
@@ -423,7 +350,7 @@ def post_preview():
 
     The Preview button posts the live form here with target="_blank", so what
     you see is exactly the draft in front of you — nothing is written to the
-    database and nothing has to be saved first.
+    store and nothing has to be saved first.
     """
     data = _post_from_form()
     preview = dict(data)
@@ -439,9 +366,7 @@ def post_preview():
 @bp.route("/posts/<int:post_id>/delete", methods=["POST"])
 @login_required
 def post_delete(post_id):
-    conn = get_db()
-    conn.execute("DELETE FROM posts WHERE id = ?", (post_id,))
-    conn.commit()
+    db.delete_post(post_id)
     flash("Post deleted.", "success")
     return redirect(url_for("admin.posts"))
 
@@ -526,7 +451,7 @@ def developer_required(view):
     return wrapped
 
 
-def _validate_new_login(conn, username, password, confirm, exclude_id=None):
+def _validate_new_login(username, password, confirm, exclude_id=None):
     """Shared checks for creating a login or resetting its password.
 
     Returns an error string, or None when everything is acceptable.
@@ -535,11 +460,7 @@ def _validate_new_login(conn, username, password, confirm, exclude_id=None):
         if not USERNAME_RE.match(username or ""):
             return ("Choose a username of 3–32 characters: lowercase letters, "
                     "numbers, dots, dashes or underscores.")
-        clash = conn.execute(
-            "SELECT id FROM users WHERE username = ? AND (? IS NULL OR id != ?)",
-            (username, exclude_id, exclude_id),
-        ).fetchone()
-        if clash is not None:
+        if db.username_taken(username, exclude_id=exclude_id):
             return "That username is already taken."
 
     if len(password or "") < MIN_PASSWORD:
@@ -552,19 +473,15 @@ def _validate_new_login(conn, username, password, confirm, exclude_id=None):
 @bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
-    conn = get_db()
-
     if request.method == "POST":
         action = request.form.get("action", "profile")
 
         if action == "profile":
-            display_name = request.form.get("display_name", "").strip()
-            email = request.form.get("email", "").strip()
-            conn.execute(
-                "UPDATE users SET display_name = ?, email = ? WHERE id = ?",
-                (display_name, email, g.user["id"]),
+            db.update_user(
+                g.user["id"],
+                display_name=request.form.get("display_name", "").strip(),
+                email=request.form.get("email", "").strip(),
             )
-            conn.commit()
             flash("Profile saved.", "success")
 
         elif action == "password":
@@ -572,7 +489,7 @@ def account():
             new = request.form.get("new_password", "")
             confirm = request.form.get("confirm_password", "")
 
-            if not check_password_hash(g.user["password_hash"], current):
+            if not db.check_user_password(g.user, current):
                 flash("Your current password is incorrect.", "error")
             elif len(new) < MIN_PASSWORD:
                 flash("Choose a new password of at least %d characters." % MIN_PASSWORD,
@@ -580,11 +497,7 @@ def account():
             elif new != confirm:
                 flash("The new passwords do not match.", "error")
             else:
-                conn.execute(
-                    "UPDATE users SET password_hash = ? WHERE id = ?",
-                    (generate_password_hash(new), g.user["id"]),
-                )
-                conn.commit()
+                db.update_user(g.user["id"], password=new)
                 flash("Password changed.", "success")
 
         return redirect(url_for("admin.account"))
@@ -594,9 +507,8 @@ def account():
 
 def _account_context():
     """Everything the Account page needs, shaped by who is signed in."""
-    conn = get_db()
     is_developer = g.user["role"] == ROLE_DEVELOPER
-    client = find_user_by_role(conn, ROLE_CLIENT) if is_developer else None
+    client = find_user_by_role(ROLE_CLIENT) if is_developer else None
     return {
         "is_developer": is_developer,
         "client": client,
@@ -619,8 +531,7 @@ def _account_context():
 @developer_required
 def client_create():
     """Provision the single client login."""
-    conn = get_db()
-    if find_user_by_role(conn, ROLE_CLIENT) is not None:
+    if find_user_by_role(ROLE_CLIENT) is not None:
         flash("A client account already exists.", "error")
         return redirect(url_for("admin.account"))
 
@@ -630,19 +541,13 @@ def client_create():
     password = request.form.get("password", "")
     confirm = request.form.get("confirm_password", password)
 
-    error = _validate_new_login(conn, username, password, confirm)
+    error = _validate_new_login(username, password, confirm)
     if error:
         flash(error, "error")
         return redirect(url_for("admin.account"))
 
-    conn.execute(
-        """INSERT INTO users
-               (username, password_hash, display_name, email, created_at, role)
-           VALUES (?, ?, ?, ?, ?, ?)""",
-        (username, generate_password_hash(password),
-         display_name or "Client", email, now_iso(), ROLE_CLIENT),
-    )
-    conn.commit()
+    db.create_user(username, password, display_name=display_name or "Client",
+                   email=email, role=ROLE_CLIENT)
     current_app.logger.info("Created client account '%s'.", username)
 
     # Surfaced once on the next render so it can be copied and handed over.
@@ -657,8 +562,7 @@ def client_create():
 @developer_required
 def client_profile():
     """Rename the client account (username, display name, email)."""
-    conn = get_db()
-    client = find_user_by_role(conn, ROLE_CLIENT)
+    client = find_user_by_role(ROLE_CLIENT)
     if client is None:
         flash("There is no client account yet.", "error")
         return redirect(url_for("admin.account"))
@@ -671,17 +575,12 @@ def client_profile():
         flash("Choose a username of 3–32 characters: lowercase letters, numbers, "
               "dots, dashes or underscores.", "error")
         return redirect(url_for("admin.account"))
-    clash = conn.execute("SELECT id FROM users WHERE username = ? AND id != ?",
-                         (username, client["id"])).fetchone()
-    if clash is not None:
+    if db.username_taken(username, exclude_id=client["id"]):
         flash("That username is already taken.", "error")
         return redirect(url_for("admin.account"))
 
-    conn.execute(
-        "UPDATE users SET username = ?, display_name = ?, email = ? WHERE id = ?",
-        (username, display_name or "Client", email, client["id"]),
-    )
-    conn.commit()
+    db.update_user(client["id"], username=username,
+                   display_name=display_name or "Client", email=email)
     flash("Client account updated.", "success")
     return redirect(url_for("admin.account"))
 
@@ -690,22 +589,19 @@ def client_profile():
 @developer_required
 def client_password():
     """Set a new password for the client without knowing the old one."""
-    conn = get_db()
-    client = find_user_by_role(conn, ROLE_CLIENT)
+    client = find_user_by_role(ROLE_CLIENT)
     if client is None:
         flash("There is no client account yet.", "error")
         return redirect(url_for("admin.account"))
 
     password = request.form.get("password", "")
     confirm = request.form.get("confirm_password", password)
-    error = _validate_new_login(conn, None, password, confirm)
+    error = _validate_new_login(None, password, confirm)
     if error:
         flash(error, "error")
         return redirect(url_for("admin.account"))
 
-    conn.execute("UPDATE users SET password_hash = ? WHERE id = ?",
-                 (generate_password_hash(password), client["id"]))
-    conn.commit()
+    db.update_user(client["id"], password=password)
     current_app.logger.info("Reset password for client '%s'.", client["username"])
     session["new_credentials"] = {"username": client["username"],
                                  "password": password, "kind": "reset"}
@@ -716,8 +612,7 @@ def client_password():
 @developer_required
 def client_delete():
     """Remove the client login. Their posts and leads are untouched."""
-    conn = get_db()
-    client = find_user_by_role(conn, ROLE_CLIENT)
+    client = find_user_by_role(ROLE_CLIENT)
     if client is None:
         flash("There is no client account yet.", "error")
         return redirect(url_for("admin.account"))
@@ -729,8 +624,7 @@ def client_delete():
         flash("You can't delete the account you're signed in with.", "error")
         return redirect(url_for("admin.account"))
 
-    conn.execute("DELETE FROM users WHERE id = ?", (client["id"],))
-    conn.commit()
+    db.delete_user(client["id"])
     current_app.logger.info("Deleted client account '%s'.", client["username"])
     flash("Client account deleted. Blog posts and leads were not affected.",
           "success")

@@ -33,9 +33,12 @@ app = Flask(__name__)
 
 app.config.update(
     # --- Sessions (the admin dashboard signs users in with a signed cookie) ---
-    # Set a long random FLASK_SECRET_KEY in .env for production: without it the
-    # fallback below changes on every restart, which logs everyone out.
-    SECRET_KEY=os.getenv("FLASK_SECRET_KEY") or os.urandom(32),
+    # FLASK_SECRET_KEY from .env wins; otherwise db.secret_key() generates one
+    # once and keeps it in instance/secret_key. It must be STABLE across both
+    # restarts and gunicorn workers — a per-process random key means the cookie
+    # written at sign-in is rejected by the next worker to answer, which looks
+    # exactly like a wrong password.
+    SECRET_KEY=db.secret_key(app),
     PERMANENT_SESSION_LIFETIME=timedelta(days=14),
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
@@ -75,8 +78,8 @@ app.config.update(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Create the SQLite schema (and seed the dashboard login) before serving, then
-# mount the /admin dashboard.
+# Create the JSON store (importing any legacy SQLite data and seeding the
+# dashboard login) before serving, then mount the /admin dashboard.
 db.init_db(app)
 app.register_blueprint(admin_bp)
 
@@ -387,9 +390,7 @@ def contact():
 
     if lead_id is not None:
         try:
-            conn = db.get_db()
-            conn.execute("UPDATE leads SET emailed = 1 WHERE id = ?", (lead_id,))
-            conn.commit()
+            db.mark_lead_emailed(lead_id)
         except Exception as exc:
             logger.error("Could not flag lead %s as emailed: %s", lead_id, exc)
 
@@ -405,28 +406,19 @@ def contact():
 @app.route("/blogs")
 def blog():
     """List every published post, newest first."""
-    posts = db.get_db().execute(
-        """SELECT * FROM posts WHERE status = 'published'
-           ORDER BY COALESCE(published_at, updated_at) DESC, id DESC"""
-    ).fetchall()
-    return render_template("blog.html", posts=posts)
+    return render_template("blog.html", posts=db.published_posts())
 
 
 @app.route("/blogs/<slug>")
 def blog_post(slug):
     """A single published post. Drafts 404 until they're published."""
-    conn = db.get_db()
-    post = conn.execute(
-        "SELECT * FROM posts WHERE slug = ? AND status = 'published'", (slug,)
-    ).fetchone()
+    post = db.get_post_by_slug(slug, status="published")
     if post is None:
         abort(404)
 
     # Count the read. Best-effort: a failure here must never break the page.
     try:
-        conn.execute("UPDATE posts SET views = views + 1 WHERE id = ?",
-                     (post["id"],))
-        conn.commit()
+        db.increment_views(post["id"])
     except Exception as exc:
         logger.warning("Could not increment views for %s: %s", slug, exc)
 

@@ -11,8 +11,28 @@ cp .env.example .env      # then fill in the values you need
 python app.py             # http://127.0.0.1:5000
 ```
 
-The SQLite database is created automatically on first boot at
-`instance/fcc.db` (gitignored). Set `DATABASE_PATH` in `.env` to move it.
+## Where the data lives
+
+There is no database. The dashboard only holds three small collections, so they
+are plain JSON files, created automatically on first boot:
+
+```
+instance/data/users.json      dashboard logins (password hashes only)
+instance/data/leads.json      contact-form submissions
+instance/data/posts.json      blog posts, draft and published
+instance/data/security.json   failed sign-in counters
+instance/secret_key           session-signing key, generated once
+```
+
+`instance/` is gitignored and sits outside `static/`, so nothing there is
+reachable by a URL and a deploy never overwrites live data. Set `DATABASE_PATH`
+in `.env` to move the folder.
+
+**Back it up by copying that one folder.** To restore, copy it back.
+
+If an older `instance/fcc.db` (SQLite) is present, its users, leads and posts
+are imported automatically the first time the app boots on this version. The
+`.db` file is left in place afterwards as a backup — nothing re-imports it.
 
 ## Admin dashboard
 
@@ -24,6 +44,11 @@ The SQLite database is created automatically on first boot at
 | Leads | `/admin/leads` | Search, filter by status, paginate, view, set status, delete |
 | Blog Posts | `/admin/posts` | Create, edit, publish/unpublish, delete |
 | Account | `/admin/account` | Display name, email, change password |
+
+Sign-in is rate limited: five failed attempts for the same username from the
+same address triggers a lockout that grows from 1 minute to an hour. The
+counters live in the store, so they are shared by every worker process and
+survive a restart. Clear them with `python manage.py unlock`.
 
 ### Accounts
 
@@ -50,20 +75,39 @@ Password: SmashInteractiveAgency!2026
 
 The sign-in page does not display it (it used to show a debug-only hint; that
 was removed). Because the credential is committed in this repo, treat it as a
-development login only. Before the site goes live, either change the password from
-**Account → Change password**, or set `ADMIN_USERNAME` / `ADMIN_PASSWORD` in
-`.env` and delete `instance/fcc.db` so a different login is seeded instead.
+development login only. Before the site goes live, change the password from
+**Account → Change password** — or run `python manage.py reset smashteam`.
 
-Two other production settings live in `.env`: `FLASK_SECRET_KEY` (a stable
-random value — without it every restart signs everyone out) and
-`SESSION_COOKIE_SECURE=1` once the site is served over HTTPS.
+Seeding only runs for a username that does not exist yet. Once the password has
+been changed, `ADMIN_PASSWORD` in `.env` and the value in `db.py` are both dead
+letters, and the only way back in is the CLI below.
+
+### Locked out? Fix it from the server shell
+
+Run these on the deployed machine, from the project folder:
+
+```bash
+python manage.py users                       # who can sign in, and when they last did
+python manage.py reset smashteam             # prompts for a new password
+python manage.py reset smashteam --generate  # prints a strong one instead
+python manage.py create newname --role developer
+python manage.py delete oldname
+python manage.py unlock                      # clear brute-force lockouts
+```
+
+Only the hash is ever written, so a password can be replaced but never read
+back.
+
+One more production setting lives in `.env`: `SESSION_COOKIE_SECURE=1`, once
+the site is served over HTTPS.
 
 ## How the pieces fit
 
 | File | Role |
 | --- | --- |
 | `app.py` | Marketing routes, contact form + Resend email, nav/footer data, `/blog` |
-| `db.py` | SQLite schema (`users`, `leads`, `posts`), connection handling, seeding |
+| `db.py` | The whole data layer: JSON store (`users`, `leads`, `posts`), locking, atomic writes, seeding |
+| `manage.py` | Account CLI — list, reset password, create, delete, unlock |
 | `admin.py` | The `/admin` blueprint: auth, leads, posts, account |
 | `templates/admin/` | Dashboard templates (own shell, not the marketing `base.html`) |
 | `static/css/admin.css` | Dashboard stylesheet — standalone, fully responsive |
@@ -97,8 +141,8 @@ The dashboard topbar shows the Smash Interactive wordmark
 `.svg`, `.png`, or `.webp` all work; if the file is absent the badge falls back
 to the account's initials.
 
-Contact-form submissions are written to the `leads` table *before* the
-notification email is attempted, so a Resend outage can't lose a lead.
+Contact-form submissions are written to `leads.json` *before* the notification
+email is attempted, so a Resend outage can't lose a lead.
 
 The blog has a public side at `/blogs` and `/blogs/<slug>`; only `published`
 posts appear there, and `/blog/...` redirects to `/blogs/...`. "Blog" is in the

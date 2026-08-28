@@ -5,7 +5,8 @@
 static/uploads/*
 !static/uploads/.gitkeep
 
-# SQLite database (leads + blog posts live here)
+# JSON data store + session key (logins, leads, blog posts live here).
+# Never committed: it is live customer data, and a deploy must not overwrite it.
 instance/
 *.db
 *.sqlite3

@@ -6,7 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Florida Chicken Coops: a server-rendered Flask marketing site (10 public pages)
 plus an admin dashboard at `/admin` for leads and blog posts. No build step, no
-JS framework, no ORM, no bundler — Jinja templates, hand-written CSS, vanilla JS.
+JS framework, no database, no ORM, no bundler — Jinja templates, hand-written
+CSS, vanilla JS, and a JSON-file data layer.
 Keep it that way unless asked otherwise; adding a toolchain is a bigger decision
 than it looks.
 
@@ -30,10 +31,11 @@ python _shot.py out.png 390   # args: outfile, viewport width
 `_shot.py` hardcodes the home page on port `5057`, so it only shoots `/` — edit
 its `url` or write a throwaway Playwright script for anything else.
 
-When verifying non-trivially, prefer a throwaway database over the real one:
-set `DATABASE_PATH` to a temp file and use `app.test_client()`, which exercises
-routes without a live server. Stub `app.send_contact_email` so tests don't hit
-Resend.
+When verifying non-trivially, prefer a throwaway store over the real one: set
+`DATABASE_PATH` to a temp *directory* and use `app.test_client()`, which
+exercises routes without a live server. Stub `app.send_contact_email` so tests
+don't hit Resend. `DATABASE_PATH` is read on every `data_dir()` call, so set it
+before importing `app`.
 
 ## Architecture
 
@@ -81,11 +83,33 @@ new file. Brand palette: gold `--color-gold: #c5a06a`, dark brown
 
 ### Data layer (`db.py`)
 
-Plain `sqlite3`, three tables — `users`, `leads`, `posts`. The database is
-created at `instance/fcc.db` (gitignored, override with `DATABASE_PATH`), and
-`init_db(app)` is idempotent: it runs `CREATE TABLE IF NOT EXISTS` and seeds the
-dashboard login on every boot, so a fresh clone works immediately. Connections
-are per-request via `get_db()` on `flask.g`.
+Plain JSON files, no database. Three collections — `users`, `leads`, `posts` —
+plus `security` (sign-in lockout counters), each its own file under
+`instance/data/` (gitignored, override the folder with `DATABASE_PATH`).
+`init_db(app)` is idempotent: it creates the store, imports a legacy
+`instance/fcc.db` once if one is there, and seeds the dashboard login on every
+boot, so a fresh clone works immediately.
+
+There is **no connection object and no `get_db()`** — call the named functions
+(`db.search_leads`, `db.create_post`, `db.verify_login`, …). Every read
+re-reads the file; there is deliberately no in-process cache, because gunicorn
+workers would each cache a different copy.
+
+Three things any flat-file store gets wrong that this one must not, so don't
+simplify them away:
+
+- **Atomic writes.** `_save()` writes a temp file in the same directory,
+  `fsync`s, then `os.replace()`s. A crash mid-write can never leave a truncated
+  `users.json` that locks the dashboard out.
+- **Cross-process locking.** `_mutate()` holds an OS lock (`fcntl` on the VPS,
+  `msvcrt` on Windows) on a sidecar `.lock` file across the whole
+  read-modify-write. Without it two gunicorn workers saving at once lose one
+  write. Never read-then-write outside `_mutate()`.
+- **File permissions.** `users.json` and `security.json` are chmod 0600 and the
+  data dir 0700 (`PRIVATE_STORES`). Effective on Linux; near-no-op on Windows.
+
+A damaged file is copied aside as `*.corrupt` and read as empty rather than
+taking the site down.
 
 `db.py` reads its env vars **lazily**, inside functions, because `app.py`
 imports it before `load_dotenv()` runs. Keep new config reads inside functions
@@ -104,9 +128,10 @@ posts (CRUD + draft↔published), account (profile + password change).
 - `admin/base.html` exposes `{% block topbar %}` (whole action bar) and
   `{% block scripts %}`; the editor overrides both. The identity chip lives in
   `admin/partials/identity.html` so both topbars share it.
-- New columns go in `db.MIGRATIONS`, never into `SCHEMA` — `CREATE TABLE IF NOT
-  EXISTS` is a no-op on an existing database. `apply_migrations()` adds only
-  what's missing and runs on every boot.
+- New fields go in the `*_DEFAULTS` dicts in `db.py`. That is the whole job:
+  `_hydrate()` tops up every record with any key it predates on the way out of
+  the store, so old files upgrade themselves on read. This is what replaces
+  schema migrations — there is no `SCHEMA` and no `MIGRATIONS` any more.
 - Template filters `pretty_date`, `source_label` (in `admin.py`) and `post_html`
   (in `app.py`) are registered app-wide, so public templates can use them too.
 - `post_html` renders author HTML unescaped by design (the editor is behind a
@@ -116,7 +141,7 @@ posts (CRUD + draft↔published), account (profile + password change).
 
 ### Leads are stored before the email is sent
 
-`contact()` writes the lead to SQLite *first*, then attempts the Resend API, then
+`contact()` writes the lead to `leads.json` *first*, then attempts the Resend API, then
 flags `emailed`. A Resend outage must never lose a submission. If email fails the
 form still re-renders with `error=True` — the lead is safe in the dashboard.
 Email goes over Resend's HTTPS API, never SMTP (VPS port-25 blocks).
@@ -126,7 +151,7 @@ Email goes over Resend's HTTPS API, never SMTP (VPS port-25 blocks).
 `users.role` is `developer` or `client` (`db.ROLES`).
 
 - **developer** — the seeded agency login. `init_db()` promotes the seeded
-  username to this role on *every* boot, so a database that predates the column
+  username to this role on *every* boot, so a store that predates the field
   (where it defaulted to `client`) upgrades itself and the roles can't drift.
   It sees its own profile plus a panel to provision and manage the client login.
 - **client** — the business's own login. Identical access to leads and posts; it
@@ -152,6 +177,31 @@ Deleting the client removes the login only; posts, leads, and uploads are
 deliberately left alone. A deleted user's live session resolves to `g.user =
 None` on the next request and is redirected to the login, which is the intended
 behaviour.
+
+### Sign-in hardening
+
+Four things guard `/admin/login`; none is decorative.
+
+- **The session key must be stable.** `db.secret_key(app)` returns
+  `FLASK_SECRET_KEY` or a value generated once into `instance/secret_key`
+  (0600). The old `os.urandom(32)` fallback gave every gunicorn worker a
+  *different* key, so the cookie written at sign-in was rejected by whichever
+  worker answered next — the browser bounced back to the login page and correct
+  credentials looked wrong. Never reintroduce a per-process fallback.
+- **Lockout.** Five failures for the same `username|ip` triggers a lockout
+  growing 1min → 5min → 15min → 1hr (`db.LOCKOUT_STEPS`). Counters live in
+  `security.json`, not memory, so they are shared across workers and survive a
+  restart. `python manage.py unlock` clears them.
+- **Constant-ish time.** `db.verify_login()` checks an unknown username against
+  a dummy hash so a failed sign-in takes the same time either way and can't be
+  timed to enumerate accounts. Keep the generic error message too.
+- **Hashes only.** `create_user`/`update_user` take `password=` and hash it
+  internally; nothing else may write `password_hash`. A plaintext password
+  exists only in the one-shot `session["new_credentials"]` handover.
+
+`manage.py` is the way back in when nobody can sign in — seeding only ever
+inserts a username that doesn't exist, so it can *not* reset a changed
+password, and neither can `ADMIN_PASSWORD`.
 
 ### Password fields
 
